@@ -1,0 +1,29 @@
+{
+  "author": "houjiale",
+  "author_icon": "",
+  "description": "将长篇小说转化为结构化分镜剧本的完整流水线 v2.1。数据模型对齐 ArcReel project.json schema（dict-based name-keyed assets），Python 自动校验、长篇小说分段策略、跨集一致性检查、FFmpeg 过渡效果。",
+  "detail_describe": "6 阶段流水线 v2.1：源文件加载 → 资产库建立（角色/场景/道具，name-keyed dict，对齐 ArcReel schema）→ 分段分集规划 → 分批剧本生成（逐集 Pydantic 级校验 + 跨集引用一致性）→ 图像 Prompt 输出 → 视频合成（FFmpeg builder 带过渡效果）。\n\nv2.1 升级：\n- 数据模型完全对齐 ArcReel：角色/场景/道具用 dict（name-keyed）而非数组 ID\n- segment_id 强制 E{n}S{nn} 格式（与 ArcReel ID_PATTERN 一致）\n- validators.py 重写：增加 Pydantic-style 校验（description 非空字符串、duration 1-60 范围等）\n- 增加 _meta.json 注册文件\n- SKILL.md 新增 style 模板集成说明、reference_video 模式提及、编辑/回退流程",
+  "display_description": "Novel-to-Video Pipeline v2.1.0 — ArcReel Schema 对齐版",
+  "display_name": "小说转视频流水线 v2.1",
+  "download_count": 0,
+  "download_url": "",
+  "icon": "",
+  "id": 0,
+  "is_downloaded": true,
+  "last_modified_time": "2026-06-19 23:50:00",
+  "md5": "",
+  "name": "novel-to-video-pipeline",
+  "scope": ["main"],
+  "type": "内容创作",
+  "use_cases": [
+    "帮我把这本小说转成分镜剧本",
+    "从《三体》生成结构化剧本",
+    "把这本网络小说做成分集方案和分镜",
+    "生成所有角色设计图的 AI prompt",
+    "小说转视频第一步：提取资产库",
+    "帮我规划这部小说的分集断点",
+    "校验剧本 JSON 格式和一致性",
+    "用 FFmpeg 把分镜图合成为视频"
+  ],
+  "version": "2.1.0"
+}
