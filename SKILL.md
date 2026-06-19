@@ -1,11 +1,11 @@
 ---
 name: novel-to-video-pipeline
 description: >
-  将长篇小说转化为结构化分镜剧本的完整流水线。六阶段：源文件加载 → 资产库建立（角色/场景/道具 dict name-keyed）→ 分集规划 → 剧本生成（shot-by-shot 结构化 JSON，narration/drama 双模式）→ 图像 Prompt 输出 → 视频合成（xfade dissolve/fade + afade 音频淡化）。v2.4 新增 episode_plan 顶层 extra_fields 检测、drama 模式夹具、增强型测试覆盖。
-version: 2.4.0
+  将长篇小说转化为结构化分镜剧本的完整流水线。六阶段：源文件加载 → 资产库建立（角色/场景/道具 dict name-keyed）→ 分集规划 → 剧本生成（shot-by-shot 结构化 JSON，narration/drama 双模式）→ 图像 Prompt 输出 → 视频合成（xfade dissolve/fade + afade 音频淡化）。v2.5 实现与 ArcReel Pydantic 正典 schema 逐字段对齐：dialogue speaker/line、narration/drama mode-specific 字段拆分、action verb 检测、字段集扩展（character_sheet/scene_sheet/prop_sheet/note/schema_version）。
+version: 2.5.0
 ---
 
-# Novel-to-Video Pipeline v2.4
+# Novel-to-Video Pipeline v2.5
 
 将长篇小说转化为结构化分镜剧本的完整流水线。纯文本处理由 Marvis 自闭环，图像/视频阶段输出平台无关的 prompt 与调用指令。
 
@@ -13,6 +13,7 @@ version: 2.4.0
 
 | 版本 | 核心变更 |
 |------|---------|
+| v2.5 | ArcReel Pydantic 正典 schema 逐字段对齐：dialogue speaker/line、mode-specific 字段拆分、scene action verb 检测、字段集扩展 |
 | v2.4 | episode_plan 顶层 extra_fields 检测，drama 模式测试夹具及校验覆盖，夹具从 7 增至 10 |
 | v2.3 | `_check_extra_fields()` 全层级字段越界检测（Arcreel forbid 对齐），style 枚举校验，script_file 存在性交叉校验，FFmpeg afade 音频交叉淡化，单帧退化保护，7 夹具测试套件 |
 | v2.2 | validators.py `--strict` 模式（WARN→FAIL），episode_plan↔project.json 交叉校验，xfade fade/dissolve 实现，segment_id 跳号检测，drama 模式 dialogue 结构校验 |
@@ -58,16 +59,17 @@ Stage 6: 视频合成       →  FFmpeg xfade + afade（可选）
 }
 ```
 
-**字段约束**：
+**字段约束**（v2.5 对齐 ArcReel Pydantic 正典）：
 - `project.json` 顶层仅允许: `title, content_mode, style, word_count, chapter_count, characters, scenes, props, episodes`
-- 角色仅允许: `description, voice_style`
-- 场景仅允许: `description`
-- 道具仅允许: `description`
-- episode_N.json 段级仅允许: `segment_id/scene_id, duration_seconds, novel_text, characters_in_segment/characters_in_scene, scenes, props, image_prompt, video_prompt, transition_to_next, segment_break, dialogue`
+- 角色仅允许: `description, voice_style, character_sheet, reference_image`
+- 场景仅允许: `description, scene_sheet`
+- 道具仅允许: `description, prop_sheet`
+- narration 模式 segment 仅允许: `segment_id, duration_seconds, novel_text, characters_in_segment, scenes, props, image_prompt, video_prompt, transition_to_next, segment_break, note`（**禁止 scene_id**）
+- drama 模式 scene 仅允许: `scene_id, duration_seconds, characters_in_scene, scenes, props, image_prompt, video_prompt, transition_to_next, segment_break, dialogue, note`（**禁止 segment_id**）
 - image_prompt 仅允许: `scene, composition`
 - composition 仅允许: `shot_type, lighting, ambiance`
 - video_prompt 仅允许: `action, camera_motion, ambiance_audio, dialogue`
-- dialogue 行仅允许: `character, text`
+- dialogue 行仅允许: `speaker, line`（v2.5 对齐 ArcReel `Dialogue` 模型，原 `character/text` 已废弃）
 
 **v2.3+ 字段检测**：`validators.py` 在所有层级运行 `_check_extra_fields()`，未知字段直接 FAIL（对齐 Arcreel `ConfigDict(extra='forbid')`）。
 

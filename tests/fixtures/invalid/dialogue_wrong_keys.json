@@ -1,0 +1,31 @@
+{
+  "episode": 1,
+  "title": "dialogue 用错键名应被拒",
+  "content_mode": "drama",
+  "scenes": [
+    {
+      "scene_id": "E1S01",
+      "duration_seconds": 8,
+      "characters_in_scene": ["叶尘"],
+      "scenes": ["青云宗练武场"],
+      "props": ["青冥剑"],
+      "image_prompt": {
+        "scene": "Misty morning at a martial arts training ground with ancient stone tiles a lone young swordsman practicing under a willow tree morning fog swirling around practice dummies",
+        "composition": {
+          "shot_type": "Long Shot",
+          "lighting": "Soft dawn light filtering through fog",
+          "ambiance": "Mysterious and serene"
+        }
+      },
+      "video_prompt": {
+        "action": "The young swordsman executes a slow deliberate sword kata blade cutting through mist",
+        "camera_motion": "Pan Left",
+        "ambiance_audio": "Distant birdsong wind through willow branches"
+      },
+      "transition_to_next": "cut",
+      "dialogue": [
+        {"character": "叶尘", "text": "第一千次了，还是差一点。"}
+      ]
+    }
+  ]
+}

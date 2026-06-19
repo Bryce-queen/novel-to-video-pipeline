@@ -24,7 +24,7 @@
       },
       "transition_to_next": "cut",
       "dialogue": [
-        {"character": "叶尘", "text": "第一千次了，还是差一点。"}
+        {"speaker": "叶尘", "line": "第一千次了，还是差一点。"}
       ]
     },
     {
@@ -48,8 +48,8 @@
       },
       "transition_to_next": "dissolve",
       "dialogue": [
-        {"character": "柳青", "text": "你就是那个打破石碑的外门弟子？"},
-        {"character": "叶尘", "text": "是，柳师姐有何指教？"}
+        {"speaker": "柳青", "line": "你就是那个打破石碑的外门弟子？"},
+        {"speaker": "叶尘", "line": "是，柳师姐有何指教？"}
       ]
     }
   ]

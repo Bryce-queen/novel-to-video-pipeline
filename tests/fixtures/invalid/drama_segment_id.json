@@ -1,0 +1,29 @@
+{
+  "episode": 1,
+  "title": "drama 段含 segment_id 应被拒",
+  "content_mode": "drama",
+  "scenes": [
+    {
+      "scene_id": "E1S01",
+      "segment_id": "E1S01",
+      "duration_seconds": 8,
+      "characters_in_scene": ["叶尘"],
+      "scenes": ["青云宗练武场"],
+      "props": ["青冥剑"],
+      "image_prompt": {
+        "scene": "Misty morning at a martial arts training ground with ancient stone tiles a lone young swordsman practicing sword forms under a willow tree",
+        "composition": {
+          "shot_type": "Long Shot",
+          "lighting": "Soft dawn light",
+          "ambiance": "Mysterious and serene"
+        }
+      },
+      "video_prompt": {
+        "action": "The young swordsman executes a slow deliberate sword kata",
+        "camera_motion": "Pan Left",
+        "ambiance_audio": "Distant birdsong wind through willow branches"
+      },
+      "transition_to_next": "cut"
+    }
+  ]
+}

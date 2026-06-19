@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Novel-to-Video Pipeline v2.4 — 产出物校验脚本集（字段级严格校验 + Arcreel forbid 对齐）。
+"""Novel-to-Video Pipeline v2.5 — 产出物校验脚本集（ArcReel 正典 schema 逐字段对齐 + extra='forbid'）。
 
 使用方式:
     python validators.py project    <project.json> [--strict]                    # 校验 project.json
@@ -78,6 +78,18 @@ FORBIDDEN_WORDS = re.compile(
     re.IGNORECASE,
 )
 
+# v2.5: image_prompt.scene 中的动作动词检测（ArcReel: "动作请写到 video_prompt.action"）
+SCENE_ACTION_VERBS = re.compile(
+    r"\b(executes?|walks?|runs?|jumps?|strikes?|draws?|"
+    r"sheathes?|turns?|steps?|pauses?|opens?|closes?|"
+    r"grabs?|throws?|pulls?|pushes?|kicks?|dodges?|"
+    r"swings?|crouches?|leaps?|climbs?|falls?|flies?|"
+    r"sits?|stands?|kneels?|bows?|waves?|points?|"
+    r"rushes?|charges?|retreats?|advances?|sprints?|"
+    r"slashes?|parries?|blocks?|lunges?)\b",
+    re.IGNORECASE,
+)
+
 MIN_CHAR_DESC_CHARS = 30
 MIN_SCENE_DESC_CHARS = 20
 MIN_PROP_DESC_CHARS = 20
@@ -99,7 +111,7 @@ def check_prompt_text(field_name: str, text: str, min_words: int = 0) -> None:
 
 
 # ──────────────────────────────────────────────
-# v2.3: 字段越界检测（对齐 Arcreel extra="forbid"）
+# v2.5: 字段越界检测（ArcReel 正典 schema 逐字段对齐）
 # ──────────────────────────────────────────────
 
 # project.json 合法字段
@@ -108,28 +120,30 @@ PROJECT_VALID_FIELDS = frozenset({
     "characters", "scenes", "props", "episodes",
 })
 
-CHAR_VALID_FIELDS = frozenset({"description", "voice_style"})
-SCENE_VALID_FIELDS = frozenset({"description"})
-PROP_VALID_FIELDS = frozenset({"description"})
+# v2.5: 对齐 ArcReel project.ts Character 接口
+CHAR_VALID_FIELDS = frozenset({"description", "voice_style", "character_sheet", "reference_image"})
+# v2.5: 对齐 ArcReel project.ts Scene 接口
+SCENE_VALID_FIELDS = frozenset({"description", "scene_sheet"})
+# v2.5: 对齐 ArcReel project.ts Prop 接口
+PROP_VALID_FIELDS = frozenset({"description", "prop_sheet"})
 
 # episode_N.json 合法顶层字段
+# v2.5: +duration_seconds, +novel, +schema_version（ArcReel episode 脚本正典字段）
 EPISODE_VALID_FIELDS = frozenset({
     "episode", "title", "content_mode",
     "segments", "scenes",
+    "duration_seconds", "novel", "schema_version",
 })
 
-# segment 合法字段（narration/drama 共用超集）
-SEGMENT_VALID_FIELDS = frozenset({
-    "segment_id", "scene_id",
-    "duration_seconds",
-    "novel_text",
-    "characters_in_segment", "characters_in_scene",
-    "scenes", "props",
-    "image_prompt", "video_prompt",
-    "transition_to_next",
-    "segment_break",
-    "dialogue",
+# v2.5: segment 字段按 content_mode 拆分（禁止 narration 出现 scene_id / drama 出现 segment_id）
+SEGMENT_CORE_FIELDS = frozenset({
+    "duration_seconds", "scenes", "props",
+    "image_prompt", "video_prompt", "transition_to_next",
+    "segment_break", "dialogue",
+    "note",  # v2.5: ArcReel NarrationSegment / DramaScene 均有 note 字段
 })
+NARRATION_EXTRA_FIELDS = frozenset({"segment_id", "novel_text", "characters_in_segment"})
+DRAMA_EXTRA_FIELDS = frozenset({"scene_id", "characters_in_scene"})
 
 # image_prompt 子字段
 IMAGE_PROMPT_VALID_FIELDS = frozenset({"scene", "composition"})
@@ -145,7 +159,7 @@ PLAN_EPISODE_VALID_FIELDS = frozenset({
     "key_events", "key_characters", "key_scenes",
 })
 
-DIALOGUE_LINE_VALID_FIELDS = frozenset({"character", "text"})
+DIALOGUE_LINE_VALID_FIELDS = frozenset({"speaker", "line"})
 
 
 def _check_extra_fields(obj: dict, valid: frozenset, path: str, errors: list[str]) -> None:
@@ -353,8 +367,19 @@ def _validate_segment_entry(
     valid_props: set[str],
     errors: list[str],
 ) -> None:
-    # v2.3: segment 级 extra_fields
-    _check_extra_fields(seg, SEGMENT_VALID_FIELDS, sid, errors)
+    # v2.5: segment 级 extra_fields 按 content_mode 拆分
+    valid_fields = SEGMENT_CORE_FIELDS
+    if mode == "narration":
+        valid_fields = valid_fields | NARRATION_EXTRA_FIELDS
+        # 禁止 narration 段出现 scene_id（ArcReel NarrationSegment 无此字段）
+        if "scene_id" in seg:
+            errors.append(f"{sid}: narration 段禁止 scene_id 字段（仅 drama 模式使用）")
+    else:
+        valid_fields = valid_fields | DRAMA_EXTRA_FIELDS
+        # 禁止 drama 段出现 segment_id（ArcReel DramaScene 无此字段）
+        if "segment_id" in seg:
+            errors.append(f"{sid}: drama 段禁止 segment_id 字段（仅 narration 模式使用）")
+    _check_extra_fields(seg, valid_fields, sid, errors)
 
     id_field = "segment_id" if mode == "narration" else "scene_id"
     seg_id = seg.get(id_field, sid)
@@ -381,6 +406,14 @@ def _validate_segment_entry(
             errors.append(f"{seg_id}: image_prompt.scene 为空")
         else:
             check_prompt_text(f"{seg_id} image_prompt.scene", scene_text, min_words=30)
+            # v2.5: 检测 image_prompt.scene 中的动作动词（ArcReel 规定 scene 只描述静态画面）
+            action_matches = SCENE_ACTION_VERBS.findall(scene_text)
+            if action_matches:
+                unique_matches = sorted(set(m.lower() for m in action_matches))
+                warn(
+                    f"{seg_id}: image_prompt.scene 包含动作动词 {unique_matches}，"
+                    "请只描述静态画面，动作应写入 video_prompt.action"
+                )
         comp = ip.get("composition", {})
         if comp:
             _validate_composition(seg_id, comp, errors)
@@ -455,13 +488,13 @@ def _validate_drama_dialogue(seg_id: str, seg: dict, errors: list[str]) -> None:
             errors.append(f"{seg_id}: dialogue[{di}] 必须是对象")
             continue
         _check_extra_fields(line, DIALOGUE_LINE_VALID_FIELDS, f"{seg_id}.dialogue[{di}]", errors)
-        for k in ("character", "text"):
+        for k in ("speaker", "line"):
             if k not in line:
                 errors.append(f"{seg_id}: dialogue[{di}] 缺少字段: {k}")
-        txt = line.get("text", "")
+        txt = line.get("line", "")
         if txt and FORBIDDEN_WORDS.search(txt):
             errors.append(
-                f"{seg_id}: dialogue[{di}].text 包含禁止词: {txt[:60]}..."
+                f"{seg_id}: dialogue[{di}].line 包含禁止词: {txt[:60]}..."
             )
 
 
@@ -497,6 +530,11 @@ def validate_script(project_path: str, script_path: str) -> None:
     content_mode = script.get("content_mode", project.get("content_mode", "narration"))
     if content_mode not in VALID_CONTENT_MODES:
         errors.append(f"content_mode 无效: '{content_mode}'")
+
+    # v2.5: schema_version 校验
+    sv = script.get("schema_version")
+    if sv is not None and (not isinstance(sv, int) or isinstance(sv, bool) or sv < 1):
+        errors.append(f"schema_version 必须是正整数 (当前 {sv})")
 
     if content_mode == "narration":
         segments_key = "segments"

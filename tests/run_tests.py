@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""v2.4 测试套件 — 覆盖 project / episode / script / crosscheck / estimate 全部命令，含 drama 模式。
+"""v2.5 测试套件 — 覆盖 project / episode / script / crosscheck / estimate 全部命令，含 drama 模式 + ArcReel 正典 schema 对齐。
 
 用法:
     python run_tests.py [--strict]
@@ -53,7 +53,7 @@ def main():
     strict = "--strict" in sys.argv
 
     print(f"\n{BOLD}╔══════════════════════════════════════╗{RESET}")
-    print(f"{BOLD}║   novel-to-video-pipeline v2.4      ║{RESET}")
+    print(f"{BOLD}║   novel-to-video-pipeline v2.5      ║{RESET}")
     print(f"{BOLD}║   测试套件                          ║{RESET}")
     print(f"{BOLD}╚══════════════════════════════════════╝{RESET}")
     print(f"\n  strict 模式: {'ON' if strict else 'OFF'}")
@@ -121,6 +121,42 @@ def main():
     print("\n  episode_plan_bad.json (顶层 extra field):")
     results["invalid_plan"] = run(
         base_cmd + ["episode", str(INVALID_DIR / "episode_plan_bad.json"), "150000"],
+        expect_fail=True,
+    )
+
+    # v2.5 新增: ArcReel 正典 schema 对齐——禁止 narration 段含 scene_id
+    print("\n  narration_scene_id.json (narration 段含 scene_id 应被拒):")
+    results["invalid_narration_scene_id"] = run(
+        base_cmd
+        + [
+            "script",
+            str(VALID_DIR / "project.json"),
+            str(INVALID_DIR / "narration_scene_id.json"),
+        ],
+        expect_fail=True,
+    )
+
+    # v2.5 新增: 禁止 drama 段含 segment_id
+    print("\n  drama_segment_id.json (drama 段含 segment_id 应被拒):")
+    results["invalid_drama_segment_id"] = run(
+        base_cmd
+        + [
+            "script",
+            str(VALID_DIR / "project_drama.json"),
+            str(INVALID_DIR / "drama_segment_id.json"),
+        ],
+        expect_fail=True,
+    )
+
+    # v2.5 新增: 禁止 dialogue 使用 character/text 键名（应为 speaker/line）
+    print("\n  dialogue_wrong_keys.json (dialogue 键名错误 character/text 应被拒):")
+    results["invalid_dialogue_keys"] = run(
+        base_cmd
+        + [
+            "script",
+            str(VALID_DIR / "project_drama.json"),
+            str(INVALID_DIR / "dialogue_wrong_keys.json"),
+        ],
         expect_fail=True,
     )
 

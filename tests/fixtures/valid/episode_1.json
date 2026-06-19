@@ -5,7 +5,6 @@
   "segments": [
     {
       "segment_id": "E1S01",
-      "scene_id": "青云宗练武场",
       "duration_seconds": 8,
       "novel_text": "清晨的雾气尚未散去，青云宗练武场上已经有一个人影在挥剑。叶尘已经在这里练了整整一个时辰，汗水浸透了他的粗布衣衫，但他的眼神依旧坚定如铁。",
       "characters_in_segment": ["叶尘"],
@@ -29,7 +28,6 @@
     },
     {
       "segment_id": "E1S02",
-      "scene_id": "青云宗练武场",
       "duration_seconds": 6,
       "novel_text": "远处的外门弟子宿舍方向传来喧嚣声，其他弟子们陆续前往练武场准备晨练。叶尘收起剑势，深吸了一口气。今天又是新的一天。",
       "characters_in_segment": ["叶尘"],
@@ -53,7 +51,6 @@
     },
     {
       "segment_id": "E1S03",
-      "scene_id": "剑阁",
       "duration_seconds": 10,
       "novel_text": "午后的剑阁静悄悄的，叶尘在第三层角落翻找着剑谱。他的手指拂过一本本泛黄的书页，突然在一本残缺的剑谱前停了下来。残卷上的字迹虽然模糊，但隐隐透出一股凌厉的剑意。",
       "characters_in_segment": ["叶尘"],
@@ -77,7 +74,6 @@
     },
     {
       "segment_id": "E1S04",
-      "scene_id": "外门弟子宿舍",
       "duration_seconds": 7,
       "novel_text": "深夜的外门弟子宿舍里，其他弟子都已熟睡。叶尘借着窗外透进来的月光，在床铺上摊开残卷，默默记诵着上面的快剑口诀。他知道，这或许是他命运转折的开始。",
       "characters_in_segment": ["叶尘"],
@@ -101,7 +97,6 @@
     },
     {
       "segment_id": "E1S05",
-      "scene_id": "青云宗练武场",
       "duration_seconds": 9,
       "novel_text": "三天后的月度考核，叶尘站在练武场中央面对一百斤重的测力石碑。所有弟子都等着看这个外门废物的笑话。叶尘闭上眼，脑海中浮现残卷上的口诀，然后一掌击出——石碑轰然碎裂！全场鸦雀无声。",
       "characters_in_segment": ["叶尘", "林峰", "墨长老"],
