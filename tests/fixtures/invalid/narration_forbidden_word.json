@@ -1,0 +1,30 @@
+{
+  "episode": 1,
+  "title": "narration novel_text 含禁止词应被拒",
+  "content_mode": "narration",
+  "segments": [
+    {
+      "segment_id": "E1S01",
+      "duration_seconds": 8,
+      "novel_text": "叶尘陷入了对往事的回忆，思绪飘回到十五年前的那个雨夜，他仿佛又看到了师父的背影。",
+      "characters_in_segment": ["叶尘"],
+      "scenes": ["青云宗练武场"],
+      "props": ["青冥剑"],
+      "image_prompt": {
+        "scene": "Misty morning at a martial arts training ground with ancient stone tiles, a lone young swordsman practicing sword forms under a willow tree, morning fog swirling around practice dummies.",
+        "composition": {
+          "shot_type": "Long Shot",
+          "lighting": "Soft dawn light filtering through fog, cool blue-gray tones",
+          "ambiance": "Mysterious and serene atmosphere"
+        }
+      },
+      "video_prompt": {
+        "action": "The young swordsman executes a slow deliberate sword kata, blade cutting through mist",
+        "camera_motion": "Pan Left",
+        "ambiance_audio": "Distant birdsong, wind through willow branches"
+      },
+      "transition_to_next": "cut",
+      "segment_break": false
+    }
+  ]
+}

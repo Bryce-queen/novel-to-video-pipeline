@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Novel-to-Video Pipeline v2.7 — 产出物校验脚本集（ArcReel 正典 schema 逐字段对齐 + extra='forbid'）。
+"""Novel-to-Video Pipeline v2.8 — 产出物校验脚本集（ArcReel 正典 schema 逐字段对齐 + extra='forbid'）。
 
 使用方式:
     python validators.py project    <project.json> [--strict]                    # 校验 project.json
@@ -480,6 +480,9 @@ def _validate_segment_entry(
     if mode == "narration":
         if "novel_text" not in seg:
             errors.append(f"{seg_id}: narration 模式缺少 novel_text")
+        else:
+            # v2.8: narration novel_text 禁止词扫描（与 scene/action/dialogue 对齐）
+            check_prompt_text(f"{seg_id} novel_text", seg["novel_text"])
         if "characters_in_segment" not in seg:
             errors.append(f"{seg_id}: narration 模式缺少 characters_in_segment")
         # v2.6: narration 段禁止 dialogue（ArcReel NarrationSegment 无此字段）

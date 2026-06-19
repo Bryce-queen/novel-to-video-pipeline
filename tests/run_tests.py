@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""v2.7 测试套件 — 覆盖 project / episode / script / crosscheck / estimate 全部命令，含 drama 模式 + ArcReel 正典 schema 对齐。
+"""v2.8 测试套件 — 覆盖 project / episode / script / crosscheck / estimate 全部命令，含 drama 模式 + ArcReel 正典 schema 对齐。
 
 用法:
     python run_tests.py [--strict]
@@ -53,7 +53,7 @@ def main():
     strict = "--strict" in sys.argv
 
     print(f"\n{BOLD}╔══════════════════════════════════════╗{RESET}")
-    print(f"{BOLD}║   novel-to-video-pipeline v2.7      ║{RESET}")
+    print(f"{BOLD}║   novel-to-video-pipeline v2.8      ║{RESET}")
     print(f"{BOLD}║   测试套件                          ║{RESET}")
     print(f"{BOLD}╚══════════════════════════════════════╝{RESET}")
     print(f"\n  strict 模式: {'ON' if strict else 'OFF'}")
@@ -228,6 +228,18 @@ def main():
             "script",
             str(VALID_DIR / "project.json"),
             str(INVALID_DIR / "no_lighting_ambiance.json"),
+        ],
+        expect_fail=True,
+    )
+
+    # v2.8 新增: narration novel_text 含禁止词
+    print("\n  narration_forbidden_word.json (narration novel_text 含禁止词应被拒):")
+    results["invalid_narration_forbidden_word"] = run(
+        base_cmd
+        + [
+            "script",
+            str(VALID_DIR / "project.json"),
+            str(INVALID_DIR / "narration_forbidden_word.json"),
         ],
         expect_fail=True,
     )
