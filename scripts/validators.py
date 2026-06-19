@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-"""Novel-to-Video Pipeline v2.1 — 产出物校验脚本集（ArcReel Schema 对齐版）。
+"""Novel-to-Video Pipeline v2.2 — 产出物校验脚本集。
 
 使用方式：
-    python validators.py project    <project.json>                    # 校验 project.json
-    python validators.py episode    <episode_plan.json> <word_count>  # 校验分集方案
-    python validators.py script     <project.json> <episode_N.json>   # 校验单集剧本
-    python validators.py crosscheck <project.json> <scripts_dir>      # 跨集一致性
-    python validators.py estimate   <project.json>                    # 预估产出量
+    python validators.py project    <project.json> [--strict]                    # 校验 project.json
+    python validators.py episode    <episode_plan.json> <word_count> [<project.json>]  # 校验分集方案
+    python validators.py script     <project.json> <episode_N.json> [--strict]   # 校验单集剧本
+    python validators.py crosscheck <project.json> <scripts_dir> [--strict]      # 跨集一致性
+    python validators.py estimate   <project.json>                               # 预估产出量
 """
 
 import json
@@ -14,12 +14,15 @@ import sys
 import os
 import re
 from pathlib import Path
-from typing import Any
-
+from typing import Optional
 
 # ──────────────────────────────────────────────
 # 通用工具
 # ──────────────────────────────────────────────
+
+STRICT = False
+WARNING_COUNT = 0
+
 
 def load_json(path: str) -> dict:
     with open(path, "r", encoding="utf-8") as f:
@@ -36,11 +39,16 @@ def ok(msg: str) -> None:
 
 
 def warn(msg: str) -> None:
-    print(f"[WARN] {msg}")
+    global WARNING_COUNT, STRICT
+    WARNING_COUNT += 1
+    if STRICT:
+        fail(msg)
+    else:
+        print(f"[WARN] {msg}")
 
 
 # ──────────────────────────────────────────────
-# 枚举值（对齐 ArcReel lib/script_models.py）
+# 枚举值
 # ──────────────────────────────────────────────
 
 VALID_SHOT_TYPES = frozenset({
@@ -56,19 +64,28 @@ VALID_CAMERA_MOTIONS = frozenset({
 
 VALID_TRANSITIONS = frozenset({"cut", "fade", "dissolve"})
 
-# ID 格式：E{n}S{nn} 或 E{n}S{nn}_{x}（对齐 ArcReel ID_PATTERN）
 SEGMENT_ID_PATTERN = re.compile(r"^E\d+S\d+(?:_\d+)?$")
 
-# 禁止词族（中英混合检测）
 FORBIDDEN_WORDS = re.compile(
     r"\b(陷入|回忆|思绪|意识到|画外音|BGM|精致|震撼|回忆翻涌|决心|仿佛|像蝴蝶般|"
     r"背景音乐|配乐|suddenly realize|flashback|nostalgia|masterpiece|breathtaking)\b",
     re.IGNORECASE,
 )
 
+MIN_CHAR_DESC_CHARS = 30
+MIN_SCENE_DESC_CHARS = 20
+MIN_PROP_DESC_CHARS = 20
+
+
+def parse_seg_id(seg_id: str) -> Optional[tuple[int, int]]:
+    """解析 E{n}S{nn} 格式，返回 (episode_number, segment_index)。解析失败返回 None。"""
+    m = re.match(r"^E(\d+)S(\d+)(?:_\d+)?$", seg_id)
+    if m:
+        return int(m.group(1)), int(m.group(2))
+    return None
+
 
 def check_prompt_text(field_name: str, text: str, min_words: int = 0) -> None:
-    """检查单个 prompt 字段的禁止词和最小字数。"""
     if FORBIDDEN_WORDS.search(text):
         fail(f"{field_name} 包含禁止词/短语: {text[:80]}...")
     words = text.split()
@@ -77,14 +94,13 @@ def check_prompt_text(field_name: str, text: str, min_words: int = 0) -> None:
 
 
 # ──────────────────────────────────────────────
-# 1. project.json 校验（v2.1 重写——对齐 ArcReel schema）
+# 1. project.json 校验
 # ──────────────────────────────────────────────
 
 def validate_project(path: str) -> None:
     data = load_json(path)
     errors: list[str] = []
 
-    # 顶层必填字段
     for key in ("title", "content_mode", "characters", "scenes", "props"):
         if key not in data:
             errors.append(f"project.json 缺少字段: {key}")
@@ -92,15 +108,12 @@ def validate_project(path: str) -> None:
     if errors:
         fail("\n".join(errors))
 
-    # content_mode
     if data["content_mode"] not in ("narration", "drama"):
         fail(f"content_mode 无效: '{data['content_mode']}'，必须是 narration 或 drama")
 
-    # characters 必须是 dict（name-keyed，对齐 ArcReel）
     chars = data["characters"]
     if not isinstance(chars, dict):
         fail(f"characters 字段必须是对象（dict），当前类型: {type(chars).__name__}")
-
     if len(chars) < 2:
         fail(f"角色数不足: {len(chars)} (至少需要 2 个)")
 
@@ -108,23 +121,21 @@ def validate_project(path: str) -> None:
         if not isinstance(c, dict):
             errors.append(f"角色 '{name}' 数据格式错误，应为对象")
             continue
-
         desc = c.get("description", "")
         if not isinstance(desc, str) or not desc.strip():
             errors.append(f"角色 '{name}' 缺少必填字段: description（须为非空字符串）")
-        elif len(desc.strip()) < 30:
-            errors.append(f"角色 '{name}' 的 description 不足 30 个中文字符 (当前 {len(desc.strip())})")
-
-        # voice_style 可选，但若存在必须为非空字符串
+        elif len(desc.strip()) < MIN_CHAR_DESC_CHARS:
+            errors.append(
+                f"角色 '{name}' 的 description 不足 {MIN_CHAR_DESC_CHARS} 个中文字符 "
+                f"(当前 {len(desc.strip())})"
+            )
         vs = c.get("voice_style")
         if vs is not None and (not isinstance(vs, str) or not vs.strip()):
             errors.append(f"角色 '{name}' 的 voice_style 若存在必须为非空字符串")
 
-    # scenes 必须是 dict
     scenes = data["scenes"]
     if not isinstance(scenes, dict):
-        errors.append(f"scenes 字段必须是对象（dict）")
-
+        errors.append("scenes 字段必须是对象（dict）")
     for name, s in scenes.items():
         if not isinstance(s, dict):
             errors.append(f"场景 '{name}' 数据格式错误，应为对象")
@@ -132,14 +143,15 @@ def validate_project(path: str) -> None:
         desc = s.get("description", "")
         if not isinstance(desc, str) or not desc.strip():
             errors.append(f"场景 '{name}' 缺少必填字段: description（须为非空字符串）")
-        elif len(desc.strip()) < 20:
-            errors.append(f"场景 '{name}' 的 description 不足 20 个中文字符 (当前 {len(desc.strip())})")
+        elif len(desc.strip()) < MIN_SCENE_DESC_CHARS:
+            errors.append(
+                f"场景 '{name}' 的 description 不足 {MIN_SCENE_DESC_CHARS} 个中文字符 "
+                f"(当前 {len(desc.strip())})"
+            )
 
-    # props 必须是 dict
     props = data["props"]
     if not isinstance(props, dict):
-        errors.append(f"props 字段必须是对象（dict）")
-
+        errors.append("props 字段必须是对象（dict）")
     for name, p in props.items():
         if not isinstance(p, dict):
             errors.append(f"道具 '{name}' 数据格式错误，应为对象")
@@ -147,8 +159,11 @@ def validate_project(path: str) -> None:
         desc = p.get("description", "")
         if not isinstance(desc, str) or not desc.strip():
             errors.append(f"道具 '{name}' 缺少必填字段: description（须为非空字符串）")
-        elif len(desc.strip()) < 20:
-            errors.append(f"道具 '{name}' 的 description 不足 20 个中文字符 (当前 {len(desc.strip())})")
+        elif len(desc.strip()) < MIN_PROP_DESC_CHARS:
+            errors.append(
+                f"道具 '{name}' 的 description 不足 {MIN_PROP_DESC_CHARS} 个中文字符 "
+                f"(当前 {len(desc.strip())})"
+            )
 
     if errors:
         fail("\n".join(errors))
@@ -157,11 +172,12 @@ def validate_project(path: str) -> None:
 
 
 # ──────────────────────────────────────────────
-# 2. episode_plan.json 校验
+# 2. episode_plan.json 校验（v2.2：支持 project.json 交叉校验）
 # ──────────────────────────────────────────────
 
-def validate_episode_plan(path: str, novel_word_count: int) -> None:
-    data = load_json(path)
+def validate_episode_plan(plan_path: str, novel_word_count: int,
+                          project_path: Optional[str] = None) -> None:
+    data = load_json(plan_path)
 
     if "episodes" not in data:
         fail("episode_plan.json 缺少 episodes 数组")
@@ -170,7 +186,14 @@ def validate_episode_plan(path: str, novel_word_count: int) -> None:
     if not eps:
         fail("episode_plan.json 的 episodes 为空")
 
-    # 断点连续性检查
+    # 加载 project 资产列表用于交叉校验
+    valid_chars: set[str] = set()
+    valid_scenes: set[str] = set()
+    if project_path:
+        project = load_json(project_path)
+        valid_chars = set(project.get("characters", {}).keys())
+        valid_scenes = set(project.get("scenes", {}).keys())
+
     prev_end = 0
     for i, ep in enumerate(eps):
         for k in ("episode", "title", "chapter_range", "summary", "key_events"):
@@ -178,21 +201,34 @@ def validate_episode_plan(path: str, novel_word_count: int) -> None:
                 fail(f"第 {i+1} 集缺少字段: {k}")
 
         cr = ep["chapter_range"]
-        if not isinstance(cr, list) or len(cr) != 2 or not all(isinstance(x, int) for x in cr) or cr[0] > cr[1]:
+        if (not isinstance(cr, list) or len(cr) != 2
+                or not all(isinstance(x, int) for x in cr) or cr[0] > cr[1]):
             fail(f"第 {i+1} 集 chapter_range 非法: {cr}")
 
         if i > 0 and cr[0] != prev_end + 1:
             fail(f"第 {i} 集与第 {i+1} 集断点不连续: [{prev_end}] -> [{cr[0]}]")
-
         prev_end = cr[1]
 
         if not ep["key_events"]:
             fail(f"第 {i+1} 集 key_events 为空")
 
-        if "key_characters" in ep and not isinstance(ep["key_characters"], list):
-            fail(f"第 {i+1} 集 key_characters 必须是数组")
+        # v2.2: 交叉校验 key_characters 和 key_scenes 是否在 project.json 中存在
+        if "key_characters" in ep:
+            if not isinstance(ep["key_characters"], list):
+                fail(f"第 {i+1} 集 key_characters 必须是数组")
+            if valid_chars:
+                for cname in ep["key_characters"]:
+                    if cname not in valid_chars:
+                        warn(f"第 {i+1} 集 key_characters 引用了 project.json 中不存在的角色: '{cname}'")
 
-    # 预估每集平均字数
+        if "key_scenes" in ep:
+            if not isinstance(ep["key_scenes"], list):
+                fail(f"第 {i+1} 集 key_scenes 必须是数组")
+            if valid_scenes:
+                for sname in ep["key_scenes"]:
+                    if sname not in valid_scenes:
+                        warn(f"第 {i+1} 集 key_scenes 引用了 project.json 中不存在的场景: '{sname}'")
+
     if novel_word_count > 0 and eps:
         avg_words = novel_word_count / len(eps)
         print(f"[INFO] 共 {len(eps)} 集, 预估每集约 {int(avg_words)} 字")
@@ -201,15 +237,17 @@ def validate_episode_plan(path: str, novel_word_count: int) -> None:
 
 
 # ──────────────────────────────────────────────
-# 3. 单集剧本 episode_N.json 校验（v2.1 重写）
+# 3. 单集剧本 episode_N.json 校验（v2.2：episode 字段一致性 +
+#    drama 对话校验）
 # ──────────────────────────────────────────────
 
 def _validate_composition(seg_id: str, comp: dict, errors: list[str]) -> None:
-    """校验 composition 子结构。"""
     shot_type = comp.get("shot_type", "")
     if shot_type not in VALID_SHOT_TYPES:
-        errors.append(f"{seg_id}: shot_type 非法: '{shot_type}' (合法值: {sorted(VALID_SHOT_TYPES)})")
-
+        errors.append(
+            f"{seg_id}: shot_type 非法: '{shot_type}' "
+            f"(合法值: {sorted(VALID_SHOT_TYPES)})"
+        )
     for field in ("lighting", "ambiance"):
         val = comp.get(field, "")
         if val:
@@ -225,13 +263,12 @@ def _validate_segment_entry(
     valid_props: set[str],
     errors: list[str],
 ) -> None:
-    """校验单段（narration segment 或 drama scene）的内部字段。"""
-
-    # segment_id / scene_id 格式校验
     id_field = "segment_id" if mode == "narration" else "scene_id"
     seg_id = seg.get(id_field, sid)
     if not SEGMENT_ID_PATTERN.match(seg_id):
-        errors.append(f"{seg_id}: {id_field} 格式错误，应为 E{{n}}S{{nn}} 或 E{{n}}S{{nn}}_{{x}}")
+        errors.append(
+            f"{seg_id}: {id_field} 格式错误，应为 E{{n}}S{{nn}} 或 E{{n}}S{{nn}}_{{x}}"
+        )
 
     # duration_seconds
     dur = seg.get("duration_seconds")
@@ -252,7 +289,6 @@ def _validate_segment_entry(
             errors.append(f"{seg_id}: image_prompt.scene 为空")
         else:
             check_prompt_text(f"{seg_id} image_prompt.scene", scene_text, min_words=30)
-
         comp = ip.get("composition", {})
         if comp:
             _validate_composition(seg_id, comp, errors)
@@ -265,14 +301,14 @@ def _validate_segment_entry(
         for k in ("action", "camera_motion", "ambiance_audio"):
             if k not in vp:
                 errors.append(f"{seg_id}: video_prompt 缺少 {k}")
-
         action = vp.get("action", "")
         check_prompt_text(f"{seg_id} video_prompt.action", action)
-
         cam = vp.get("camera_motion", "")
         if cam not in VALID_CAMERA_MOTIONS:
-            errors.append(f"{seg_id}: camera_motion 非法: '{cam}' (合法值: {sorted(VALID_CAMERA_MOTIONS)})")
-
+            errors.append(
+                f"{seg_id}: camera_motion 非法: '{cam}' "
+                f"(合法值: {sorted(VALID_CAMERA_MOTIONS)})"
+            )
         aos = vp.get("ambiance_audio", "")
         if aos:
             lower = aos.lower()
@@ -282,9 +318,12 @@ def _validate_segment_entry(
     # transition_to_next
     tt = seg.get("transition_to_next", "cut")
     if tt not in VALID_TRANSITIONS:
-        errors.append(f"{seg_id}: transition_to_next 非法: '{tt}' (合法值: {sorted(VALID_TRANSITIONS)})")
+        errors.append(
+            f"{seg_id}: transition_to_next 非法: '{tt}' "
+            f"(合法值: {sorted(VALID_TRANSITIONS)})"
+        )
 
-    # 引用一致性：角色/场景/道具名称必须在 project.json 对应 bucket 中存在
+    # 引用一致性
     chars_field = "characters_in_segment" if mode == "narration" else "characters_in_scene"
     seg_chars = seg.get(chars_field)
     if isinstance(seg_chars, list):
@@ -306,14 +345,34 @@ def _validate_segment_entry(
             if pname not in valid_props:
                 errors.append(f"{seg_id}: 引用了 project.json 中不存在的道具: '{pname}'")
 
-    # novel_text 必填（narration 必须保留原文用于配音）
     if mode == "narration" and "novel_text" not in seg:
         errors.append(f"{seg_id}: narration 模式缺少 novel_text")
 
-    # segment_break 类型检查（可选字段）
     sb = seg.get("segment_break")
     if sb is not None and not isinstance(sb, bool):
         errors.append(f"{seg_id}: segment_break 必须是布尔值")
+
+
+def _validate_drama_dialogue(seg_id: str, seg: dict, errors: list[str]) -> None:
+    """v2.2: drama 模式对话校验。"""
+    dialogue = seg.get("dialogue")
+    if dialogue is None:
+        return
+    if not isinstance(dialogue, list):
+        errors.append(f"{seg_id}: dialogue 必须是数组")
+        return
+    for di, line in enumerate(dialogue):
+        if not isinstance(line, dict):
+            errors.append(f"{seg_id}: dialogue[{di}] 必须是对象")
+            continue
+        for k in ("character", "text"):
+            if k not in line:
+                errors.append(f"{seg_id}: dialogue[{di}] 缺少字段: {k}")
+        txt = line.get("text", "")
+        if txt and FORBIDDEN_WORDS.search(txt):
+            errors.append(
+                f"{seg_id}: dialogue[{di}].text 包含禁止词: {txt[:60]}..."
+            )
 
 
 def validate_script(project_path: str, script_path: str) -> None:
@@ -326,8 +385,21 @@ def validate_script(project_path: str, script_path: str) -> None:
 
     errors: list[str] = []
 
+    # v2.2: episode 字段与文件名一致性校验
     if "episode" not in script:
         errors.append("剧本缺少 episode 字段")
+    else:
+        script_ep = script["episode"]
+        fname = Path(script_path).stem  # e.g. "episode_3"
+        m = re.match(r"^episode_(\d+)$", fname)
+        if m:
+            file_ep = int(m.group(1))
+            if script_ep != file_ep:
+                warn(
+                    f"episode 字段 ({script_ep}) 与文件名 ({fname}) 不一致，"
+                    f"应为 {file_ep}"
+                )
+
     if "title" not in script:
         errors.append("剧本缺少 title 字段")
 
@@ -335,7 +407,6 @@ def validate_script(project_path: str, script_path: str) -> None:
     if content_mode not in ("narration", "drama"):
         errors.append(f"content_mode 无效: '{content_mode}'")
 
-    # 模式派发
     if content_mode == "narration":
         segments_key = "segments"
         id_key = "segment_id"
@@ -345,7 +416,6 @@ def validate_script(project_path: str, script_path: str) -> None:
 
     if segments_key not in script:
         errors.append(f"剧本缺少 {segments_key} 数组")
-
     if errors:
         fail("\n".join(errors))
 
@@ -356,13 +426,17 @@ def validate_script(project_path: str, script_path: str) -> None:
     seg_ids = set()
     for i, seg in enumerate(segments):
         sid = seg.get(id_key, f"#{i+1}")
-
-        # ID 去重
         if sid in seg_ids:
             errors.append(f"{sid}: ID 重复")
         seg_ids.add(sid)
 
-        _validate_segment_entry(sid, seg, content_mode, valid_chars, valid_scenes, valid_props, errors)
+        _validate_segment_entry(
+            sid, seg, content_mode, valid_chars, valid_scenes, valid_props, errors
+        )
+
+        # v2.2: drama 模式对话校验
+        if content_mode == "drama":
+            _validate_drama_dialogue(sid, seg, errors)
 
     if errors:
         fail("\n".join(errors))
@@ -372,8 +446,43 @@ def validate_script(project_path: str, script_path: str) -> None:
 
 
 # ──────────────────────────────────────────────
-# 4. 跨集一致性校验（v2.1 增强）
+# 4. 跨集一致性校验（v2.2：segment_id 连续性）
 # ──────────────────────────────────────────────
+
+def _check_segment_continuity(ep_files: list[Path]) -> None:
+    """v2.2: 检查各集内 segment_id 是否连续无跳号。"""
+    for ep_file in ep_files:
+        data = load_json(str(ep_file))
+        mode = data.get("content_mode", "narration")
+        segments_key = "segments" if mode == "narration" else "scenes"
+        id_field = "segment_id" if mode == "narration" else "scene_id"
+
+        segments = data.get(segments_key, [])
+        if not segments:
+            continue
+
+        ep_num = data.get("episode", ep_file.stem.replace("episode_", ""))
+        ids: list[tuple[int, int]] = []
+        for seg in segments:
+            sid = seg.get(id_field, "")
+            parsed = parse_seg_id(sid)
+            if parsed:
+                ids.append(parsed)
+
+        if not ids:
+            continue
+
+        # 按 (ep, seg_idx) 排序
+        ids.sort()
+        for j in range(1, len(ids)):
+            prev_ep, prev_s = ids[j - 1]
+            cur_ep, cur_s = ids[j]
+            if cur_ep == prev_ep and cur_s != prev_s + 1:
+                warn(
+                    f"episode_{ep_num}: segment_id 跳号 "
+                    f"(E{prev_ep}S{prev_s:02d} → E{cur_ep}S{cur_s:02d})"
+                )
+
 
 def validate_crosscheck(project_path: str, scripts_dir: str) -> None:
     project = load_json(project_path)
@@ -393,34 +502,38 @@ def validate_crosscheck(project_path: str, scripts_dir: str) -> None:
         data = load_json(str(ep_file))
         mode = data.get("content_mode", project.get("content_mode", "narration"))
         segments_key = "segments" if mode == "narration" else "scenes"
-        chars_field = "characters_in_segment" if mode == "narration" else "characters_in_scene"
-
-        ep_num = data.get("episode", ep_file.stem.replace("episode_", ""))
-        seg_count = len(data.get(segments_key, []))
-        total_dur = sum(
-            s.get("duration_seconds", 0)
-            for s in data.get(segments_key, [])
-            if isinstance(s.get("duration_seconds"), int) and not isinstance(s.get("duration_seconds"), bool)
+        chars_field = (
+            "characters_in_segment" if mode == "narration" else "characters_in_scene"
         )
 
-        for seg in data.get(segments_key, []):
-            seg_id = seg.get("segment_id", seg.get("scene_id", "?"))
+        ep_num = data.get("episode", ep_file.stem.replace("episode_", ""))
+        segs = data.get(segments_key, [])
+        seg_count = len(segs)
+        total_dur = sum(
+            s.get("duration_seconds", 0)
+            for s in segs
+            if isinstance(s.get("duration_seconds"), int)
+            and not isinstance(s.get("duration_seconds"), bool)
+        )
 
+        for seg in segs:
+            seg_id = seg.get("segment_id", seg.get("scene_id", "?"))
             for cname in seg.get(chars_field, []):
                 if cname not in valid_chars:
                     issues.append(f"ep_{ep_num}/{seg_id}: 引用不存在角色 '{cname}'")
-
             for sname in seg.get("scenes", []):
                 if sname not in valid_scenes:
                     issues.append(f"ep_{ep_num}/{seg_id}: 引用不存在场景 '{sname}'")
-
             for pname in seg.get("props", []):
                 if pname not in valid_props:
                     issues.append(f"ep_{ep_num}/{seg_id}: 引用不存在道具 '{pname}'")
 
         summary.append(f"  第 {ep_num} 集: {seg_count} 段, 总时长 {total_dur}s")
 
-    print(f"[INFO] 跨集一致性概要:")
+    # v2.2: segment_id 连续性检查
+    _check_segment_continuity(episode_files)
+
+    print("[INFO] 跨集一致性概要:")
     for line in summary:
         print(line)
 
@@ -449,10 +562,8 @@ def estimate_output(path: str) -> None:
     n_chapters = data.get("chapter_count", 1)
     word_count = data.get("word_count", 0)
 
-    # 粗略估算: 每 2000 字约 1 个 segment
     est_segments = max(1, word_count // 2000)
     est_episodes = max(1, n_chapters // 5)
-
     prompt_files = n_chars + n_scenes + n_props + est_segments
 
     print(f"""
@@ -475,7 +586,10 @@ def estimate_output(path: str) -> None:
 """)
 
     if est_segments > 100:
-        print("[WARN] segment 数 > 100，强烈建议: 1) 分批生成 2) 每批后 crosscheck 3) 跨批注入角色摘要")
+        print(
+            "[WARN] segment 数 > 100，强烈建议: "
+            "1) 分批生成 2) 每批后 crosscheck 3) 跨批注入角色摘要"
+        )
 
 
 # ──────────────────────────────────────────────
@@ -483,30 +597,41 @@ def estimate_output(path: str) -> None:
 # ──────────────────────────────────────────────
 
 if __name__ == "__main__":
-    USAGE = """用法: validators.py <command> [args...]
+    USAGE = """用法: validators.py <command> [args...] [--strict]
   project    <project.json>
-  episode    <episode_plan.json> <novel_word_count>
+  episode    <episode_plan.json> <novel_word_count> [<project.json>]
   script     <project.json> <episode_N.json>
   crosscheck <project.json> <scripts_dir>
-  estimate   <project.json>"""
+  estimate   <project.json>
+
+  --strict: 将 WARN 提升为 FAIL"""
 
     if len(sys.argv) < 2:
         print(USAGE)
         sys.exit(1)
 
-    cmd = sys.argv[1]
+    # 解析 --strict
+    args = [a for a in sys.argv[1:] if a != "--strict"]
+    STRICT = len(args) < len(sys.argv) - 1
+
+    if not args:
+        print(USAGE)
+        sys.exit(1)
+
+    cmd = args[0]
 
     try:
-        if cmd == "project" and len(sys.argv) >= 3:
-            validate_project(sys.argv[2])
-        elif cmd == "episode" and len(sys.argv) >= 4:
-            validate_episode_plan(sys.argv[2], int(sys.argv[3]))
-        elif cmd == "script" and len(sys.argv) >= 4:
-            validate_script(sys.argv[2], sys.argv[3])
-        elif cmd == "crosscheck" and len(sys.argv) >= 4:
-            validate_crosscheck(sys.argv[2], sys.argv[3])
-        elif cmd == "estimate" and len(sys.argv) >= 3:
-            estimate_output(sys.argv[2])
+        if cmd == "project" and len(args) >= 2:
+            validate_project(args[1])
+        elif cmd == "episode" and len(args) >= 3:
+            project_path = args[3] if len(args) >= 4 else None
+            validate_episode_plan(args[1], int(args[2]), project_path)
+        elif cmd == "script" and len(args) >= 3:
+            validate_script(args[1], args[2])
+        elif cmd == "crosscheck" and len(args) >= 3:
+            validate_crosscheck(args[1], args[2])
+        elif cmd == "estimate" and len(args) >= 2:
+            estimate_output(args[1])
         else:
             fail(f"未知命令或参数不足: {cmd}\n\n{USAGE}")
     except SystemExit:

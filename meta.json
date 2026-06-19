@@ -1,16 +1,16 @@
 {
   "author": "houjiale",
   "author_icon": "",
-  "description": "将长篇小说转化为结构化分镜剧本的完整流水线 v2.1。数据模型对齐 ArcReel project.json schema（dict-based name-keyed assets），Python 自动校验、长篇小说分段策略、跨集一致性检查、FFmpeg 过渡效果。",
-  "detail_describe": "6 阶段流水线 v2.1：源文件加载 → 资产库建立（角色/场景/道具，name-keyed dict，对齐 ArcReel schema）→ 分段分集规划 → 分批剧本生成（逐集 Pydantic 级校验 + 跨集引用一致性）→ 图像 Prompt 输出 → 视频合成（FFmpeg builder 带过渡效果）。\n\nv2.1 升级：\n- 数据模型完全对齐 ArcReel：角色/场景/道具用 dict（name-keyed）而非数组 ID\n- segment_id 强制 E{n}S{nn} 格式（与 ArcReel ID_PATTERN 一致）\n- validators.py 重写：增加 Pydantic-style 校验（description 非空字符串、duration 1-60 范围等）\n- 增加 _meta.json 注册文件\n- SKILL.md 新增 style 模板集成说明、reference_video 模式提及、编辑/回退流程",
-  "display_description": "Novel-to-Video Pipeline v2.1.0 — ArcReel Schema 对齐版",
-  "display_name": "小说转视频流水线 v2.1",
+  "description": "将长篇小说转化为结构化分镜剧本的完整流水线 v2.2。支持 narration/drama 双模式，Python 自动校验（含 episode_plan 交叉校验、segment_id 连续性检查、drama 对话校验），长篇小说分段策略，跨集一致性检查，FFmpeg xfade 过渡合成。",
+  "detail_describe": "6 阶段流水线 v2.2：源文件加载 → 资产库建立（角色/场景/道具，name-keyed dict）→ 分段分集规划（可选 project.json 交叉校验）→ 分批剧本生成（逐集校验 + crosscheck 含 segment_id 连续性）→ 图像 Prompt 输出 → 视频合成（FFmpeg xfade，支持 fade/dissolve 过渡）。\n\nv2.2 改进：\n- validators: episode_plan 与 project.json 交叉校验（key_characters/key_scenes 存在性）\n- validators: episode 字段与文件名一致性检查\n- validators: crosscheck 中 segment_id 连续性检查（跳号检测）\n- validators: drama 模式 dialogue 数组结构和禁止词校验\n- validators: --strict 参数将 WARN 提升为 FAIL\n- ffmpeg: 实现 xfade 滤镜，支持 fade（黑场淡入淡出）/ dissolve（交叉溶解）\n\nv2.1 数据模型沿用：角色/场景/道具用 dict（name-keyed），segment_id 强制 E{n}S{nn} 格式。",
+  "display_description": "Novel-to-Video Pipeline v2.2.0 — xfade 过渡 + 完整交叉校验",
+  "display_name": "小说转视频流水线 v2.2",
   "download_count": 0,
   "download_url": "",
   "icon": "",
   "id": 0,
   "is_downloaded": true,
-  "last_modified_time": "2026-06-19 23:50:00",
+  "last_modified_time": "2026-06-19 23:55:00",
   "md5": "",
   "name": "novel-to-video-pipeline",
   "scope": ["main"],
@@ -23,7 +23,7 @@
     "小说转视频第一步：提取资产库",
     "帮我规划这部小说的分集断点",
     "校验剧本 JSON 格式和一致性",
-    "用 FFmpeg 把分镜图合成为视频"
+    "用 FFmpeg 把分镜图合成为视频（支持 fade/dissolve 过渡）"
   ],
-  "version": "2.1.0"
+  "version": "2.2.0"
 }
