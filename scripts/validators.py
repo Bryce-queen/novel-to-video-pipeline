@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Novel-to-Video Pipeline v2.3 — 产出物校验脚本集（字段级严格校验 + Arcreel forbid 对齐）。
+"""Novel-to-Video Pipeline v2.4 — 产出物校验脚本集（字段级严格校验 + Arcreel forbid 对齐）。
 
 使用方式:
     python validators.py project    <project.json> [--strict]                    # 校验 project.json
@@ -139,6 +139,7 @@ COMPOSITION_VALID_FIELDS = frozenset({"shot_type", "lighting", "ambiance"})
 VIDEO_PROMPT_VALID_FIELDS = frozenset({"action", "camera_motion", "ambiance_audio", "dialogue"})
 
 # episode_plan.json 合法字段
+PLAN_TOP_VALID_FIELDS = frozenset({"version", "episodes"})
 PLAN_EPISODE_VALID_FIELDS = frozenset({
     "episode", "title", "chapter_range", "summary",
     "key_events", "key_characters", "key_scenes",
@@ -257,6 +258,10 @@ def validate_project(path: str) -> None:
 def validate_episode_plan(plan_path: str, novel_word_count: int,
                           project_path: Optional[str] = None) -> None:
     data = load_json(plan_path)
+    errors: list[str] = []
+
+    # v2.4: 顶层字段越界检测
+    _check_extra_fields(data, PLAN_TOP_VALID_FIELDS, "episode_plan.json", errors)
 
     if "episodes" not in data:
         fail("episode_plan.json 缺少 episodes 数组")
@@ -272,8 +277,10 @@ def validate_episode_plan(plan_path: str, novel_word_count: int,
         valid_chars = set(project.get("characters", {}).keys())
         valid_scenes = set(project.get("scenes", {}).keys())
 
+    if errors:
+        fail("\n".join(errors))
+
     prev_end = 0
-    errors: list[str] = []
     for i, ep in enumerate(eps):
         _check_extra_fields(ep, PLAN_EPISODE_VALID_FIELDS, f"episodes[{i}]", errors)
 

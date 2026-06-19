@@ -1,0 +1,16 @@
+{
+  "version": "1.0",
+  "extra_unknown": "should be caught by v2.4",
+  "episodes": [
+    {
+      "episode": 1,
+      "title": "测试集",
+      "chapter_range": [1, 5],
+      "summary": "测试摘要",
+      "key_events": ["事件一"],
+      "key_characters": ["叶尘"],
+      "key_scenes": ["青云宗练武场"],
+      "unknown_plan_field": true
+    }
+  ]
+}

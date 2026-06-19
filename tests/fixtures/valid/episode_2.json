@@ -1,1 +1,53 @@
-{"episode":2,"title":"后山修行","content_mode":"narration","segments":[{"segment_id":"E2S01","duration_seconds":6,"characters_in_segment":["叶尘"],"scenes":["后山瀑布"],"props":["青冥剑"],"image_prompt":{"scene":"A magnificent waterfall cascading down a mountain cliff with mist rising, a young swordsman standing on a smooth rock beneath the falls with his sword raised in a practice stance, water droplets sparkling in the air around him."},"video_prompt":{"action":"Swordsman executes rapid sword strikes under the waterfall, water splashing dramatically with each movement, the blade cutting through the cascade creating arcs of water.","camera_motion":"Pan Right","ambiance_audio":"Thundering waterfall roar, wind through mountain pines, sword slicing through water"},"transition_to_next":"cut"}]}
+{
+  "episode": 2,
+  "title": "后山修行",
+  "content_mode": "narration",
+  "segments": [
+    {
+      "segment_id": "E2S01",
+      "duration_seconds": 8,
+      "novel_text": "后山瀑布轰鸣，水雾弥散。叶尘站在瀑布下的巨石上，手中青冥剑指向飞流，剑尖在湍急水流中纹丝不动。他默念残卷口诀，剑势陡然加快。",
+      "characters_in_segment": ["叶尘"],
+      "scenes": ["后山瀑布"],
+      "props": ["青冥剑"],
+      "image_prompt": {
+        "scene": "A magnificent waterfall cascading down a mountain cliff, mist rising in thick columns, a young swordsman standing on a smooth rock beneath the falls with his green-tinged sword held steady against the rushing water, droplets sparkling in the air around him.",
+        "composition": {
+          "shot_type": "Long Shot",
+          "lighting": "Bright midday sun filtered through mist, creating prismatic rainbow effects in the water spray",
+          "ambiance": "Raw power of nature, solitary discipline against immense force"
+        }
+      },
+      "video_prompt": {
+        "action": "The swordsman holds his stance against the pounding waterfall, then suddenly accelerates into rapid sword strikes, each movement cutting arcs through the cascade, water exploding outward with each precise strike",
+        "camera_motion": "Pan Right",
+        "ambiance_audio": "Thundering waterfall roar, wind through mountain pines, sword slicing through water"
+      },
+      "transition_to_next": "dissolve",
+      "segment_break": false
+    },
+    {
+      "segment_id": "E2S02",
+      "duration_seconds": 7,
+      "novel_text": "瀑布下游的树林中，柳青倚在古松旁，目光穿过层层水雾落在那个挥剑的身影上。她面无表情，但指尖在树干上轻轻敲击——那是她在计算剑招节奏的习惯。",
+      "characters_in_segment": ["叶尘", "柳青"],
+      "scenes": ["后山瀑布"],
+      "props": ["青冥剑"],
+      "image_prompt": {
+        "scene": "Edge of a pine forest overlooking a waterfall, an elegant young woman in flowing robes leaning against an ancient pine tree, her cold eyes watching a distant figure fighting the waterfall below, her fingers absentmindedly tapping a rhythm on the bark.",
+        "composition": {
+          "shot_type": "Medium Shot",
+          "lighting": "Dappled shade under pine canopy, soft backlight from mist-reflected sun, cool green and silver tones",
+          "ambiance": "Hidden observation, calculated detachment masking growing curiosity"
+        }
+      },
+      "video_prompt": {
+        "action": "The young woman watches silently, her expression unchanging but her tapping finger betrays her interest, her eyes narrow slightly as she analyzes the sword patterns below, a single pine needle falls past her face in slow motion",
+        "camera_motion": "Zoom In",
+        "ambiance_audio": "Distant waterfall, wind through pines, rhythmic finger tapping on bark"
+      },
+      "transition_to_next": "cut",
+      "segment_break": false
+    }
+  ]
+}

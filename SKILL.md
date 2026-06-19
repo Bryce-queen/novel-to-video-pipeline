@@ -1,11 +1,11 @@
 ---
 name: novel-to-video-pipeline
 description: >
-  将长篇小说转化为结构化分镜剧本的完整流水线。六阶段：源文件加载 → 资产库建立（角色/场景/道具 dict name-keyed）→ 分集规划 → 剧本生成（shot-by-shot 结构化 JSON，narration/drama 双模式）→ 图像 Prompt 输出 → 视频合成（xfade dissolve/fade + afade 音频淡化）。v2.3 新增强制字段越界检测、style 枚举校验、script_file 存在性交叉校验、完整测试套件。
-version: 2.3.0
+  将长篇小说转化为结构化分镜剧本的完整流水线。六阶段：源文件加载 → 资产库建立（角色/场景/道具 dict name-keyed）→ 分集规划 → 剧本生成（shot-by-shot 结构化 JSON，narration/drama 双模式）→ 图像 Prompt 输出 → 视频合成（xfade dissolve/fade + afade 音频淡化）。v2.4 新增 episode_plan 顶层 extra_fields 检测、drama 模式夹具、增强型测试覆盖。
+version: 2.4.0
 ---
 
-# Novel-to-Video Pipeline v2.3
+# Novel-to-Video Pipeline v2.4
 
 将长篇小说转化为结构化分镜剧本的完整流水线。纯文本处理由 Marvis 自闭环，图像/视频阶段输出平台无关的 prompt 与调用指令。
 
@@ -13,6 +13,7 @@ version: 2.3.0
 
 | 版本 | 核心变更 |
 |------|---------|
+| v2.4 | episode_plan 顶层 extra_fields 检测，drama 模式测试夹具及校验覆盖，夹具从 7 增至 10 |
 | v2.3 | `_check_extra_fields()` 全层级字段越界检测（Arcreel forbid 对齐），style 枚举校验，script_file 存在性交叉校验，FFmpeg afade 音频交叉淡化，单帧退化保护，7 夹具测试套件 |
 | v2.2 | validators.py `--strict` 模式（WARN→FAIL），episode_plan↔project.json 交叉校验，xfade fade/dissolve 实现，segment_id 跳号检测，drama 模式 dialogue 结构校验 |
 | v2.1 | 数据模型从数组 ID 改为 dict name-keyed，validators.py 完整重写，segment_id 正则（E{n}S{nn}），duration_seconds 1-60 约束，引用一致性校验 |
@@ -68,7 +69,7 @@ Stage 6: 视频合成       →  FFmpeg xfade + afade（可选）
 - video_prompt 仅允许: `action, camera_motion, ambiance_audio, dialogue`
 - dialogue 行仅允许: `character, text`
 
-**v2.3 强制检测**：`validators.py` 在所有层级运行 `_check_extra_fields()`，未知字段直接 FAIL（对齐 Arcreel `ConfigDict(extra='forbid')`）。
+**v2.3+ 字段检测**：`validators.py` 在所有层级运行 `_check_extra_fields()`，未知字段直接 FAIL（对齐 Arcreel `ConfigDict(extra='forbid')`）。
 
 ---
 

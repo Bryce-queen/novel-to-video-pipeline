@@ -1,1 +1,53 @@
-{"episode":3,"title":"宗门大比","content_mode":"narration","segments":[{"segment_id":"E3S01","duration_seconds":8,"characters_in_segment":["叶尘","柳青"],"scenes":["青云宗练武场"],"props":["青冥剑","寒玉剑"],"image_prompt":{"scene":"Grand tournament arena filled with hundreds of disciples, a massive stone platform in the center, two young swordsmen facing each other in final duel position, banners of the sect fluttering in the wind, tension crackling in the air."},"video_prompt":{"action":"Two swordsmen clash in an intense duel, blades spark upon contact, one with a green-tinged sword the other with an ice-crystal sword, dust rising from the stone platform, the crowd gasping with each exchange.","camera_motion":"Static","ambiance_audio":"Clashing steel, crowd murmuring then cheering, flags snapping in the wind"},"transition_to_next":"cut"}]}
+{
+  "episode": 3,
+  "title": "宗门大比",
+  "content_mode": "narration",
+  "segments": [
+    {
+      "segment_id": "E3S01",
+      "duration_seconds": 10,
+      "novel_text": "青云宗演武场上人山人海，宗门大比的决赛即将开始。叶尘与柳青分列擂台两侧，相距不过十步。台下数百名弟子屏息凝神，连墨长老都从裁判席上微微前倾了身子。",
+      "characters_in_segment": ["叶尘", "柳青", "墨长老"],
+      "scenes": ["青云宗练武场"],
+      "props": ["青冥剑", "寒玉剑"],
+      "image_prompt": {
+        "scene": "Grand tournament arena packed with hundreds of martial sect disciples, a massive stone platform in the center, two young swordsmen facing each other in final duel position ten paces apart, the young man with a green-tinged sword and the woman with an ice-crystal blade, banners of the sect fluttering in the wind, a white-haired elder leaning forward from the judges' platform.",
+        "composition": {
+          "shot_type": "Extreme Long Shot",
+          "lighting": "Harsh midday sun casting sharp shadows, dramatic high contrast, dust particles visible in god rays",
+          "ambiance": "Thick tension, the weight of expectation from the entire sect, a moment frozen before chaos"
+        }
+      },
+      "video_prompt": {
+        "action": "The two swordsmen stare each other down across the arena, the crowd completely silent, the young man's grip tightens on his sword handle, the woman's ice blade crackles faintly with cold energy, a single banner snaps loudly in the wind breaking the silence",
+        "camera_motion": "Tracking Shot",
+        "ambiance_audio": "Wind howling across the arena, flags snapping, hundreds of held breaths, a single banner's fabric crack"
+      },
+      "transition_to_next": "dissolve",
+      "segment_break": false
+    },
+    {
+      "segment_id": "E3S02",
+      "duration_seconds": 6,
+      "novel_text": "柳青率先出剑，寒玉剑化为一道冰蓝色的匹练直刺叶尘咽喉。叶尘不闪不避，青冥剑自下而上斜撩——双剑交击，金铁之声震彻全场。",
+      "characters_in_segment": ["叶尘", "柳青"],
+      "scenes": ["青云宗练武场"],
+      "props": ["青冥剑", "寒玉剑"],
+      "image_prompt": {
+        "scene": "Close view of two swords clashing at center arena, a green-tinged blade deflecting an ice-blue crystalline sword upward, sparks of cold energy and steel flying from the impact point, the two fighters faces inches apart with intense focus.",
+        "composition": {
+          "shot_type": "Close-up",
+          "lighting": "Dynamic action lighting with metallic reflections off both blades, blue-cold light from one side and warm steel gleam from the other",
+          "ambiance": "First clash of equals, the spark that ignites legend, raw skill meeting raw skill"
+        }
+      },
+      "video_prompt": {
+        "action": "The ice sword thrusts forward in a blur of blue light, the green sword rises from below in a perfect parry, the clash sends visible shockwaves of cold mist and sparks outward, both fighters recoil slightly then immediately reset their stances",
+        "camera_motion": "Static",
+        "ambiance_audio": "Deafening metallic clash, crowd gasping collectively, cold energy crackling, residual ringing of blades"
+      },
+      "transition_to_next": "cut",
+      "segment_break": false
+    }
+  ]
+}

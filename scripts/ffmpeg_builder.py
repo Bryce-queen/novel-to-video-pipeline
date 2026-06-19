@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Novel-to-Video Pipeline v2.3 — FFmpeg 视频合成（xfade 过渡 + 音频交叉淡化）。
+"""Novel-to-Video Pipeline v2.4 — FFmpeg 视频合成（xfade 过渡 + 音频交叉淡化）。
 
 使用方式:
     python ffmpeg_builder.py <episode_N.json> <images_dir>

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""v2.3 测试套件 — 覆盖 project / episode / script / crosscheck / estimate 全部命令。
+"""v2.4 测试套件 — 覆盖 project / episode / script / crosscheck / estimate 全部命令，含 drama 模式。
 
 用法:
     python run_tests.py [--strict]
@@ -53,7 +53,7 @@ def main():
     strict = "--strict" in sys.argv
 
     print(f"\n{BOLD}╔══════════════════════════════════════╗{RESET}")
-    print(f"{BOLD}║   novel-to-video-pipeline v2.3      ║{RESET}")
+    print(f"{BOLD}║   novel-to-video-pipeline v2.4      ║{RESET}")
     print(f"{BOLD}║   测试套件                          ║{RESET}")
     print(f"{BOLD}╚══════════════════════════════════════╝{RESET}")
     print(f"\n  strict 模式: {'ON' if strict else 'OFF'}")
@@ -92,6 +92,12 @@ def main():
         base_cmd + ["estimate", str(VALID_DIR / "project.json")]
     )
 
+    print("\n  script drama (episode_drama_1.json):")
+    results["valid_drama_script"] = run(
+        base_cmd + ["script", str(VALID_DIR / "project_drama.json"),
+                     str(VALID_DIR / "episode_drama_1.json")]
+    )
+
     # ── 无效夹具（应该全部拒绝）──
     print(f"\n{BOLD}── 无效夹具（预期拒绝）──{RESET}")
 
@@ -109,6 +115,12 @@ def main():
             str(VALID_DIR / "project.json"),
             str(INVALID_DIR / "episode_bad.json"),
         ],
+        expect_fail=True,
+    )
+
+    print("\n  episode_plan_bad.json (顶层 extra field):")
+    results["invalid_plan"] = run(
+        base_cmd + ["episode", str(INVALID_DIR / "episode_plan_bad.json"), "150000"],
         expect_fail=True,
     )
 
