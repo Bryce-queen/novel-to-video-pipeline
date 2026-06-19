@@ -1,11 +1,11 @@
 ---
 name: novel-to-video-pipeline
 description: >
-  将长篇小说转化为结构化分镜剧本的完整流水线。六阶段：源文件加载 → 资产库建立（角色/场景/道具 dict name-keyed）→ 分集规划 → 剧本生成（shot-by-shot 结构化 JSON，narration/drama 双模式）→ 图像 Prompt 输出 → 视频合成（xfade dissolve/fade + afade 音频淡化）。v2.7 新增：image_prompt.composition 必填、composition 子字段（shot_type/lighting/ambiance）必填。
-version: 2.7.0
+  将长篇小说转化为结构化分镜剧本的完整流水线。六阶段：源文件加载 → 资产库建立（角色/场景/道具 dict name-keyed）→ 分集规划 → 剧本生成（shot-by-shot 结构化 JSON，narration/drama 双模式）→ 图像 Prompt 输出 → 视频合成（xfade dissolve/fade + afade 音频淡化）。v2.8.1 修复：duration_seconds 按 mode 区分必填、版本号补齐、移除孤儿夹具。
+version: 2.8.1
 ---
 
-# Novel-to-Video Pipeline v2.7
+# Novel-to-Video Pipeline v2.8.1
 
 将长篇小说转化为结构化分镜剧本的完整流水线。纯文本处理由 Marvis 自闭环，图像/视频阶段输出平台无关的 prompt 与调用指令。
 
@@ -13,6 +13,7 @@ version: 2.7.0
 
 | 版本 | 核心变更 |
 |------|---------|
+| v2.8.1 | duration_seconds 按 mode 区分必填（narration 必填/drama 默认 8 可选）、版本号/SKILL.md 补齐、移除孤儿夹具 |
 | v2.7 | image_prompt.composition 必填 + composition 子字段 shot_type/lighting/ambiance 必填 |
 | v2.6 | narration 禁 dialogue + narration/drama 强制 characters 字段 + 旧 dialogue 键名 migration 提示 |
 | v2.5 | ArcReel Pydantic 正典 schema 逐字段对齐：dialogue speaker/line、mode-specific 字段拆分、scene action verb 检测、字段集扩展 |
