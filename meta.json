@@ -1,6 +1,6 @@
 {
-  "display_name": "Novel-to-Video Pipeline v2.8.1",
-  "description": "将长篇小说转化为结构化分镜剧本的完整流水线。六阶段：源文件加载 → 资产库建立（角色/场景/道具）→ 分集规划 → 剧本生成（shot-by-shot）→ 图像 Prompt 输出 → 视频合成。v2.8.1 修复：duration_seconds 按 mode 区分必填（narration 必填/drama 可选）、版本号/SKILL.md 补齐、移除孤儿夹具。",
+  "display_name": "Novel-to-Video Pipeline v2.9.0",
+  "description": "将长篇小说转化为结构化分镜剧本的完整流水线。六阶段：源文件加载 → 资产库建立（角色/场景/道具）→ 分集规划 → 剧本生成（shot-by-shot）→ 图像 Prompt 输出 → 视频合成。v2.9.0 新增：narration 模式 video_prompt.action 最少 20 词校验、narration 模式 ambiance_audio 必填（无 dialogue 时的唯一音频层）。",
   "scope": ["novel", "video-production", "storyboarding", "image-generation", "ffmpeg"],
   "use_cases": [
     "小说转视频流水线自动化",

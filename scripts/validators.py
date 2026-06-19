@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Novel-to-Video Pipeline v2.8.1 — 产出物校验脚本集（ArcReel 正典 schema 逐字段对齐 + extra='forbid'）。
+"""Novel-to-Video Pipeline v2.9.0 — 产出物校验脚本集（ArcReel 正典 schema 逐字段对齐 + extra='forbid'）。
 
 使用方式:
     python validators.py project    <project.json> [--strict]                    # 校验 project.json
@@ -438,7 +438,8 @@ def _validate_segment_entry(
             if k not in vp:
                 errors.append(f"{seg_id}: video_prompt 缺少 {k}")
         action = vp.get("action", "")
-        check_prompt_text(f"{seg_id} video_prompt.action", action)
+        check_prompt_text(f"{seg_id} video_prompt.action", action,
+                          min_words=20 if mode == "narration" else 0)
         cam = vp.get("camera_motion", "")
         if cam not in VALID_CAMERA_MOTIONS:
             errors.append(
@@ -450,6 +451,9 @@ def _validate_segment_entry(
             lower = aos.lower()
             if any(kw in lower for kw in ("bgm", "配乐", "画外音", "背景音乐")):
                 errors.append(f"{seg_id}: ambiance_audio 包含 BGM/配乐/画外音")
+        # v2.9: narration 模式无 dialogue，ambiance_audio 为唯一音频层，必须非空
+        if mode == "narration" and not aos:
+            errors.append(f"{seg_id}: narration 模式必须提供 ambiance_audio（无 dialogue 的音频背景）")
 
     tt = seg.get("transition_to_next", "cut")
     if tt not in VALID_TRANSITIONS:
