@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Novel-to-Video Pipeline v2.5 — 产出物校验脚本集（ArcReel 正典 schema 逐字段对齐 + extra='forbid'）。
+"""Novel-to-Video Pipeline v2.6 — 产出物校验脚本集（ArcReel 正典 schema 逐字段对齐 + extra='forbid'）。
 
 使用方式:
     python validators.py project    <project.json> [--strict]                    # 校验 project.json
@@ -468,8 +468,19 @@ def _validate_segment_entry(
             if pname not in valid_props:
                 errors.append(f"{seg_id}: 引用了 project.json 中不存在的道具: '{pname}'")
 
-    if mode == "narration" and "novel_text" not in seg:
-        errors.append(f"{seg_id}: narration 模式缺少 novel_text")
+    # v2.6: narration 模式必须包含 characters_in_segment
+    if mode == "narration":
+        if "novel_text" not in seg:
+            errors.append(f"{seg_id}: narration 模式缺少 novel_text")
+        if "characters_in_segment" not in seg:
+            errors.append(f"{seg_id}: narration 模式缺少 characters_in_segment")
+        # v2.6: narration 段禁止 dialogue（ArcReel NarrationSegment 无此字段）
+        if "dialogue" in seg:
+            errors.append(f"{seg_id}: narration 段禁止 dialogue 字段（仅 drama 模式使用）")
+
+    # v2.6: drama 模式必须包含 characters_in_scene
+    if mode == "drama" and "characters_in_scene" not in seg:
+        errors.append(f"{seg_id}: drama 模式缺少 characters_in_scene")
 
     sb = seg.get("segment_break")
     if sb is not None and not isinstance(sb, bool):
@@ -487,6 +498,12 @@ def _validate_drama_dialogue(seg_id: str, seg: dict, errors: list[str]) -> None:
         if not isinstance(line, dict):
             errors.append(f"{seg_id}: dialogue[{di}] 必须是对象")
             continue
+        # v2.6: 旧键名 migration 友好提示
+        if "character" in line or "text" in line:
+            errors.append(
+                f"{seg_id}: dialogue[{di}]: 检测到旧键名 character/text，"
+                "v2.5+ ArcReel 正典要求 speaker/line，请迁移"
+            )
         _check_extra_fields(line, DIALOGUE_LINE_VALID_FIELDS, f"{seg_id}.dialogue[{di}]", errors)
         for k in ("speaker", "line"):
             if k not in line:

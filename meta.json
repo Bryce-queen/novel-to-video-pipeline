@@ -1,6 +1,6 @@
 {
-  "display_name": "Novel-to-Video Pipeline v2.5",
-  "description": "将长篇小说转化为结构化分镜剧本的完整流水线。六阶段：源文件加载 → 资产库建立（角色/场景/道具）→ 分集规划 → 剧本生成（shot-by-shot）→ 图像 Prompt 输出 → 视频合成。v2.5 新增：dialogue speaker/line 对齐 ArcReel 正典、narration/drama mode-specific 字段拆分、image_prompt.scene 动作动词检测、字段集扩展（character_sheet/scene_sheet/prop_sheet/note/schema_version）。",
+  "display_name": "Novel-to-Video Pipeline v2.6",
+  "description": "将长篇小说转化为结构化分镜剧本的完整流水线。六阶段：源文件加载 → 资产库建立（角色/场景/道具）→ 分集规划 → 剧本生成（shot-by-shot）→ 图像 Prompt 输出 → 视频合成。v2.6 新增：narration 段禁止 dialogue、narration/drama 强制要求 characters_in_{segment|scene}、旧 dialogue 键名 character/text→speaker/line 迁移提示。",
   "scope": ["novel", "video-production", "storyboarding", "image-generation", "ffmpeg"],
   "use_cases": [
     "小说转视频流水线自动化",

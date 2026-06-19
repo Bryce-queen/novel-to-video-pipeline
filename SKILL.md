@@ -1,11 +1,11 @@
 ---
 name: novel-to-video-pipeline
 description: >
-  将长篇小说转化为结构化分镜剧本的完整流水线。六阶段：源文件加载 → 资产库建立（角色/场景/道具 dict name-keyed）→ 分集规划 → 剧本生成（shot-by-shot 结构化 JSON，narration/drama 双模式）→ 图像 Prompt 输出 → 视频合成（xfade dissolve/fade + afade 音频淡化）。v2.5 实现与 ArcReel Pydantic 正典 schema 逐字段对齐：dialogue speaker/line、narration/drama mode-specific 字段拆分、action verb 检测、字段集扩展（character_sheet/scene_sheet/prop_sheet/note/schema_version）。
-version: 2.5.0
+  将长篇小说转化为结构化分镜剧本的完整流水线。六阶段：源文件加载 → 资产库建立（角色/场景/道具 dict name-keyed）→ 分集规划 → 剧本生成（shot-by-shot 结构化 JSON，narration/drama 双模式）→ 图像 Prompt 输出 → 视频合成（xfade dissolve/fade + afade 音频淡化）。v2.6 新增：narration 段禁止 dialogue、narration/drama 强制要求 characters_in_{segment|scene}、旧 dialogue 键名 migration 提示。
+version: 2.6.0
 ---
 
-# Novel-to-Video Pipeline v2.5
+# Novel-to-Video Pipeline v2.6
 
 将长篇小说转化为结构化分镜剧本的完整流水线。纯文本处理由 Marvis 自闭环，图像/视频阶段输出平台无关的 prompt 与调用指令。
 
@@ -13,6 +13,7 @@ version: 2.5.0
 
 | 版本 | 核心变更 |
 |------|---------|
+| v2.6 | narration 禁 dialogue + narration/drama 强制 characters 字段 + 旧 dialogue 键名 migration 提示 |
 | v2.5 | ArcReel Pydantic 正典 schema 逐字段对齐：dialogue speaker/line、mode-specific 字段拆分、scene action verb 检测、字段集扩展 |
 | v2.4 | episode_plan 顶层 extra_fields 检测，drama 模式测试夹具及校验覆盖，夹具从 7 增至 10 |
 | v2.3 | `_check_extra_fields()` 全层级字段越界检测（Arcreel forbid 对齐），style 枚举校验，script_file 存在性交叉校验，FFmpeg afade 音频交叉淡化，单帧退化保护，7 夹具测试套件 |

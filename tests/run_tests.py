@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""v2.5 测试套件 — 覆盖 project / episode / script / crosscheck / estimate 全部命令，含 drama 模式 + ArcReel 正典 schema 对齐。
+"""v2.6 测试套件 — 覆盖 project / episode / script / crosscheck / estimate 全部命令，含 drama 模式 + ArcReel 正典 schema 对齐。
 
 用法:
     python run_tests.py [--strict]
@@ -53,7 +53,7 @@ def main():
     strict = "--strict" in sys.argv
 
     print(f"\n{BOLD}╔══════════════════════════════════════╗{RESET}")
-    print(f"{BOLD}║   novel-to-video-pipeline v2.5      ║{RESET}")
+    print(f"{BOLD}║   novel-to-video-pipeline v2.6      ║{RESET}")
     print(f"{BOLD}║   测试套件                          ║{RESET}")
     print(f"{BOLD}╚══════════════════════════════════════╝{RESET}")
     print(f"\n  strict 模式: {'ON' if strict else 'OFF'}")
@@ -156,6 +156,42 @@ def main():
             "script",
             str(VALID_DIR / "project_drama.json"),
             str(INVALID_DIR / "dialogue_wrong_keys.json"),
+        ],
+        expect_fail=True,
+    )
+
+    # v2.6 新增: narration 段禁止 dialogue
+    print("\n  narration_with_dialogue.json (narration 段含 dialogue 应被拒):")
+    results["invalid_narration_dialogue"] = run(
+        base_cmd
+        + [
+            "script",
+            str(VALID_DIR / "project.json"),
+            str(INVALID_DIR / "narration_with_dialogue.json"),
+        ],
+        expect_fail=True,
+    )
+
+    # v2.6 新增: narration 段缺 characters_in_segment
+    print("\n  narration_no_characters.json (narration 段缺 characters_in_segment 应被拒):")
+    results["invalid_narration_no_chars"] = run(
+        base_cmd
+        + [
+            "script",
+            str(VALID_DIR / "project.json"),
+            str(INVALID_DIR / "narration_no_characters.json"),
+        ],
+        expect_fail=True,
+    )
+
+    # v2.6 新增: drama 段缺 characters_in_scene
+    print("\n  drama_no_characters.json (drama 段缺 characters_in_scene 应被拒):")
+    results["invalid_drama_no_chars"] = run(
+        base_cmd
+        + [
+            "script",
+            str(VALID_DIR / "project_drama.json"),
+            str(INVALID_DIR / "drama_no_characters.json"),
         ],
         expect_fail=True,
     )

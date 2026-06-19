@@ -1,0 +1,33 @@
+{
+  "episode": 1,
+  "title": "narration 段含 dialogue 应被拒",
+  "content_mode": "narration",
+  "segments": [
+    {
+      "segment_id": "E1S01",
+      "duration_seconds": 8,
+      "novel_text": "清晨的雾气尚未散去，叶尘已经在练武场上挥剑一个时辰。",
+      "characters_in_segment": ["叶尘"],
+      "scenes": ["青云宗练武场"],
+      "props": ["青冥剑"],
+      "image_prompt": {
+        "scene": "Misty morning at a martial arts training ground with ancient stone tiles a lone young swordsman practicing sword forms under a willow tree fog swirling around practice dummies",
+        "composition": {
+          "shot_type": "Long Shot",
+          "lighting": "Soft dawn light",
+          "ambiance": "Mysterious and serene"
+        }
+      },
+      "video_prompt": {
+        "action": "The young swordsman executes a slow deliberate sword kata blade cutting through mist",
+        "camera_motion": "Pan Left",
+        "ambiance_audio": "Distant birdsong wind through willow branches"
+      },
+      "transition_to_next": "cut",
+      "segment_break": false,
+      "dialogue": [
+        {"speaker": "叶尘", "line": "第一千次了，还是差一点。"}
+      ]
+    }
+  ]
+}
