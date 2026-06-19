@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""v2.6 测试套件 — 覆盖 project / episode / script / crosscheck / estimate 全部命令，含 drama 模式 + ArcReel 正典 schema 对齐。
+"""v2.7 测试套件 — 覆盖 project / episode / script / crosscheck / estimate 全部命令，含 drama 模式 + ArcReel 正典 schema 对齐。
 
 用法:
     python run_tests.py [--strict]
@@ -53,7 +53,7 @@ def main():
     strict = "--strict" in sys.argv
 
     print(f"\n{BOLD}╔══════════════════════════════════════╗{RESET}")
-    print(f"{BOLD}║   novel-to-video-pipeline v2.6      ║{RESET}")
+    print(f"{BOLD}║   novel-to-video-pipeline v2.7      ║{RESET}")
     print(f"{BOLD}║   测试套件                          ║{RESET}")
     print(f"{BOLD}╚══════════════════════════════════════╝{RESET}")
     print(f"\n  strict 模式: {'ON' if strict else 'OFF'}")
@@ -192,6 +192,42 @@ def main():
             "script",
             str(VALID_DIR / "project_drama.json"),
             str(INVALID_DIR / "drama_no_characters.json"),
+        ],
+        expect_fail=True,
+    )
+
+    # v2.7 新增: image_prompt 缺少 composition
+    print("\n  no_composition.json (image_prompt 缺 composition 应被拒):")
+    results["invalid_no_composition"] = run(
+        base_cmd
+        + [
+            "script",
+            str(VALID_DIR / "project.json"),
+            str(INVALID_DIR / "no_composition.json"),
+        ],
+        expect_fail=True,
+    )
+
+    # v2.7 新增: composition 缺少 shot_type
+    print("\n  no_shot_type.json (composition 缺 shot_type 应被拒):")
+    results["invalid_no_shot_type"] = run(
+        base_cmd
+        + [
+            "script",
+            str(VALID_DIR / "project.json"),
+            str(INVALID_DIR / "no_shot_type.json"),
+        ],
+        expect_fail=True,
+    )
+
+    # v2.7 新增: composition 缺少 lighting 和 ambiance
+    print("\n  no_lighting_ambiance.json (composition 缺 lighting/ambiance 应被拒):")
+    results["invalid_no_lighting_ambiance"] = run(
+        base_cmd
+        + [
+            "script",
+            str(VALID_DIR / "project.json"),
+            str(INVALID_DIR / "no_lighting_ambiance.json"),
         ],
         expect_fail=True,
     )

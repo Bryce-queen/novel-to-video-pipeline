@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Novel-to-Video Pipeline v2.6 — 产出物校验脚本集（ArcReel 正典 schema 逐字段对齐 + extra='forbid'）。
+"""Novel-to-Video Pipeline v2.7 — 产出物校验脚本集（ArcReel 正典 schema 逐字段对齐 + extra='forbid'）。
 
 使用方式:
     python validators.py project    <project.json> [--strict]                    # 校验 project.json
@@ -346,15 +346,20 @@ def validate_episode_plan(plan_path: str, novel_word_count: int,
 
 def _validate_composition(seg_id: str, comp: dict, errors: list[str]) -> None:
     _check_extra_fields(comp, COMPOSITION_VALID_FIELDS, f"{seg_id}.composition", errors)
+    # v2.7: ArcReel Composition 三个字段均必填（无 default）
     shot_type = comp.get("shot_type", "")
-    if shot_type not in VALID_SHOT_TYPES:
+    if not shot_type:
+        errors.append(f"{seg_id}: composition 缺少 shot_type（ArcReel 必填字段）")
+    elif shot_type not in VALID_SHOT_TYPES:
         errors.append(
             f"{seg_id}: shot_type 非法: '{shot_type}' "
             f"(合法值: {sorted(VALID_SHOT_TYPES)})"
         )
     for field in ("lighting", "ambiance"):
         val = comp.get(field, "")
-        if val:
+        if not val:
+            errors.append(f"{seg_id}: composition 缺少 {field}（ArcReel 必填字段）")
+        else:
             check_prompt_text(f"{seg_id} composition.{field}", val)
 
 
@@ -414,8 +419,11 @@ def _validate_segment_entry(
                     f"{seg_id}: image_prompt.scene 包含动作动词 {unique_matches}，"
                     "请只描述静态画面，动作应写入 video_prompt.action"
                 )
-        comp = ip.get("composition", {})
-        if comp:
+        # v2.7: ArcReel ImagePrompt.composition 必填（无 default）
+        comp = ip.get("composition")
+        if not comp:
+            errors.append(f"{seg_id}: image_prompt 缺少 composition（ArcReel 必填字段）")
+        else:
             _validate_composition(seg_id, comp, errors)
 
     vp = seg.get("video_prompt")
