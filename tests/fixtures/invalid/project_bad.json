@@ -1,0 +1,33 @@
+{
+  "title": "测试作品",
+  "content_mode": "narration",
+  "style": "unknown_style_xyz",
+  "word_count": 50000,
+  "chapter_count": 10,
+  "unknown_field_1": "should be caught",
+  "characters": {
+    "张三": {
+      "description": "太短",
+      "voice_style": "",
+      "extra_char_field": 42
+    },
+    "李四": {
+      "description": "这是一个足够长的角色描述了足够长足够长足够长足够长足够长足够长足够长足够长"
+    }
+  },
+  "scenes": {
+    "主场景": {
+      "description": "短",
+      "unknown_scene_attr": true
+    }
+  },
+  "props": {
+    "道具A": {
+      "description": "这也太短了不够不够不够不够不够不够不够不够不够不够不够不够不够不够"
+    }
+  },
+  "episodes": [
+    {"episode": 1}
+  ],
+  "extra_top_level": "oops"
+}

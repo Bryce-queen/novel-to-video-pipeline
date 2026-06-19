@@ -1,0 +1,127 @@
+{
+  "episode": 1,
+  "title": "剑出青云",
+  "content_mode": "narration",
+  "segments": [
+    {
+      "segment_id": "E1S01",
+      "scene_id": "青云宗练武场",
+      "duration_seconds": 8,
+      "novel_text": "清晨的雾气尚未散去，青云宗练武场上已经有一个人影在挥剑。叶尘已经在这里练了整整一个时辰，汗水浸透了他的粗布衣衫，但他的眼神依旧坚定如铁。",
+      "characters_in_segment": ["叶尘"],
+      "scenes": ["青云宗练武场"],
+      "props": ["青冥剑"],
+      "image_prompt": {
+        "scene": "Misty morning at a martial arts training ground with ancient stone tiles, a lone young swordsman in simple cloth robes practicing sword forms under a centuries-old willow tree, morning fog swirling around weathered wooden practice dummies and weapon racks.",
+        "composition": {
+          "shot_type": "Long Shot",
+          "lighting": "Soft dawn light filtering through fog, cool blue-gray tones with warm golden highlights near the horizon",
+          "ambiance": "Mysterious and serene atmosphere, fog particles floating in god rays"
+        }
+      },
+      "video_prompt": {
+        "action": "The young swordsman executes a slow, deliberate sword kata, blade cutting through mist, droplets of morning dew flying off the sword tip with each precise movement, fog parting around the blade",
+        "camera_motion": "Pan Left",
+        "ambiance_audio": "Distant birdsong, wind through willow branches, rhythmic swishing of sword through air"
+      },
+      "transition_to_next": "dissolve",
+      "segment_break": false
+    },
+    {
+      "segment_id": "E1S02",
+      "scene_id": "青云宗练武场",
+      "duration_seconds": 6,
+      "novel_text": "远处的外门弟子宿舍方向传来喧嚣声，其他弟子们陆续前往练武场准备晨练。叶尘收起剑势，深吸了一口气。今天又是新的一天。",
+      "characters_in_segment": ["叶尘"],
+      "scenes": ["青云宗练武场"],
+      "props": ["青冥剑"],
+      "image_prompt": {
+        "scene": "Same training ground now with other disciples approaching in the distance, the lone swordsman finishing his practice, sheathing his sword, morning light now brighter, the ancient willow tree casting long shadows across the stone tiles.",
+        "composition": {
+          "shot_type": "Medium Long Shot",
+          "lighting": "Brighter morning light, warm golden hour tones replacing the earlier cool fog",
+          "ambiance": "Transition from solitary quiet to approaching daily life, sense of routine and purpose"
+        }
+      },
+      "video_prompt": {
+        "action": "Swordsman gracefully sheathes his sword, turns to face the approaching disciples, takes a deep steadying breath, a subtle confident smile forming at the corner of his mouth",
+        "camera_motion": "Static",
+        "ambiance_audio": "Distant footsteps on stone, murmuring voices growing louder, birds chirping more actively"
+      },
+      "transition_to_next": "cut",
+      "segment_break": false
+    },
+    {
+      "segment_id": "E1S03",
+      "scene_id": "剑阁",
+      "duration_seconds": 10,
+      "novel_text": "午后的剑阁静悄悄的，叶尘在第三层角落翻找着剑谱。他的手指拂过一本本泛黄的书页，突然在一本残缺的剑谱前停了下来。残卷上的字迹虽然模糊，但隐隐透出一股凌厉的剑意。",
+      "characters_in_segment": ["叶尘"],
+      "scenes": ["剑阁"],
+      "props": ["剑谱残卷"],
+      "image_prompt": {
+        "scene": "Ancient wooden library interior with towering shelves filled with scrolls and books, dust motes floating in shafts of afternoon sunlight through latticed windows, a young man crouched in a dim corner holding a torn and yellowed manuscript, his eyes wide with discovery.",
+        "composition": {
+          "shot_type": "Close-up",
+          "lighting": "Dramatic shaft of golden afternoon light illuminating the ancient manuscript, deep shadows in corners, warm amber and sepia tones",
+          "ambiance": "Reverent and suspenseful, the weight of ancient knowledge, a pivotal moment of discovery"
+        }
+      },
+      "video_prompt": {
+        "action": "Fingers trace across the torn pages, the young man's eyes scanning the faint text, gradually widening with excitement and recognition, he holds the manuscript closer to the light beam",
+        "camera_motion": "Zoom In",
+        "ambiance_audio": "Pages rustling, distant wind, a faint resonant hum suggesting ancient power awakening"
+      },
+      "transition_to_next": "fade",
+      "segment_break": false
+    },
+    {
+      "segment_id": "E1S04",
+      "scene_id": "外门弟子宿舍",
+      "duration_seconds": 7,
+      "novel_text": "深夜的外门弟子宿舍里，其他弟子都已熟睡。叶尘借着窗外透进来的月光，在床铺上摊开残卷，默默记诵着上面的快剑口诀。他知道，这或许是他命运转折的开始。",
+      "characters_in_segment": ["叶尘"],
+      "scenes": ["外门弟子宿舍"],
+      "props": ["剑谱残卷"],
+      "image_prompt": {
+        "scene": "Sparse wooden dormitory room at night, moonbeams streaming through a small window with a wildflower on the sill, three silhouettes of sleeping figures on beds, one figure sitting cross-legged on his bed studying a torn manuscript by moonlight.",
+        "composition": {
+          "shot_type": "Medium Shot",
+          "lighting": "Cool silver moonlight as key light, deep blue-black shadows, warm candle-like glow from a small oil lamp beside the bed",
+          "ambiance": "Quiet determination, stolen moments of study, the calm before a storm"
+        }
+      },
+      "video_prompt": {
+        "action": "The young man's lips move silently reciting the sword formula, his fingers tracing invisible sword patterns in the air above the manuscript, moonlight catching the intense focus in his eyes",
+        "camera_motion": "Tracking Shot",
+        "ambiance_audio": "Soft breathing of sleeping disciples, crickets outside, gentle wind, pages turning quietly"
+      },
+      "transition_to_next": "cut",
+      "segment_break": false
+    },
+    {
+      "segment_id": "E1S05",
+      "scene_id": "青云宗练武场",
+      "duration_seconds": 9,
+      "novel_text": "三天后的月度考核，叶尘站在练武场中央面对一百斤重的测力石碑。所有弟子都等着看这个外门废物的笑话。叶尘闭上眼，脑海中浮现残卷上的口诀，然后一掌击出——石碑轰然碎裂！全场鸦雀无声。",
+      "characters_in_segment": ["叶尘", "林峰", "墨长老"],
+      "scenes": ["青云宗练武场"],
+      "props": [],
+      "image_prompt": {
+        "scene": "Training ground filled with disciples forming a circle, a stone tablet in the center cracked and shattered, the young swordsman standing with his palm still extended, dust and stone fragments suspended in mid-air, shocked faces of the crowd including a sneering rival and a white-haired elder watching with knowing eyes.",
+        "composition": {
+          "shot_type": "Over-the-shoulder",
+          "lighting": "Harsh midday sun creating strong shadows, dust particles illuminated dramatically, high contrast action lighting",
+          "ambiance": "Shock and awe, the moment a nobody becomes somebody, complete silence before the storm of reaction"
+        }
+      },
+      "video_prompt": {
+        "action": "Slow motion of palm strike connecting with stone tablet, cracks spider-webbing from impact point, tablet exploding into fragments, fragments flying past the camera, the young man slowly opening his eyes with quiet surprise at his own power",
+        "camera_motion": "Pan Right",
+        "ambiance_audio": "Deafening crack of stone breaking, then absolute silence, a single pebble rolling across stone floor"
+      },
+      "transition_to_next": "fade",
+      "segment_break": true
+    }
+  ]
+}

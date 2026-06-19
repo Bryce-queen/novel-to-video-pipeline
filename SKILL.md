@@ -1,415 +1,254 @@
 ---
 name: novel-to-video-pipeline
-description: 将长篇小说转化为结构化分镜剧本的完整流水线。含 Python 校验、分段策略、跨集一致性检查、FFmpeg 合成（支持 fade/dissolve 过渡）。
+description: >
+  将长篇小说转化为结构化分镜剧本的完整流水线。六阶段：源文件加载 → 资产库建立（角色/场景/道具 dict name-keyed）→ 分集规划 → 剧本生成（shot-by-shot 结构化 JSON，narration/drama 双模式）→ 图像 Prompt 输出 → 视频合成（xfade dissolve/fade + afade 音频淡化）。v2.3 新增强制字段越界检测、style 枚举校验、script_file 存在性交叉校验、完整测试套件。
+version: 2.3.0
 ---
 
-# Novel-to-Video Pipeline v2.2.0
+# Novel-to-Video Pipeline v2.3
 
-将长篇小说转化为结构化分镜剧本的完整流水线。纯文本处理由 Marvis 自闭环，图像/视频阶段输出平台无关的 prompt。
+将长篇小说转化为结构化分镜剧本的完整流水线。纯文本处理由 Marvis 自闭环，图像/视频阶段输出平台无关的 prompt 与调用指令。
 
-**v2.2 改进**：
-- validators: episode_plan 与 project.json 交叉校验（key_characters/key_scenes 存在性）
-- validators: episode 字段与文件名一致性检查
-- validators: crosscheck 中 segment_id 连续性检查（跳号检测）
-- validators: drama 模式 dialogue 数组结构和禁止词校验
-- validators: `--strict` 参数将 WARN 提升为 FAIL
-- ffmpeg: 实现 xfade 滤镜，支持 fade（黑场淡入淡出）/ dissolve（交叉溶解） 过渡
+## 版本升级摘要
+
+| 版本 | 核心变更 |
+|------|---------|
+| v2.3 | `_check_extra_fields()` 全层级字段越界检测（Arcreel forbid 对齐），style 枚举校验，script_file 存在性交叉校验，FFmpeg afade 音频交叉淡化，单帧退化保护，7 夹具测试套件 |
+| v2.2 | validators.py `--strict` 模式（WARN→FAIL），episode_plan↔project.json 交叉校验，xfade fade/dissolve 实现，segment_id 跳号检测，drama 模式 dialogue 结构校验 |
+| v2.1 | 数据模型从数组 ID 改为 dict name-keyed，validators.py 完整重写，segment_id 正则（E{n}S{nn}），duration_seconds 1-60 约束，引用一致性校验 |
 
 ## 触发条件
 
-用户提到"小说转视频""小说改编""生成剧本""分镜脚本""novel to video"等关键词。
+用户提到"小说转视频""小说改编""生成剧本""分镜脚本""novel to video"等关键词，或直接提供小说文件要求结构化处理。
 
 ## 工作流总览
 
 ```
-Stage 1:   源文件加载      →  read_text + 字数统计
-Stage 1.5: 内容模式选择    →  ask_user (narration / drama)
-Stage 2:   资产库建立      →  LLM 提取 → validators.py project 校验 → 产出量预估
-Stage 3:   分段分集规划    →  LLM 分析 → validators.py episode 校验(可传入 project.json 做交叉校验)
-Stage 4:   分批剧本生成    →  逐批 LLM 生成 → validators.py script 逐集校验 →
-                             validators.py crosscheck 跨集一致性 → 用户确认
-Stage 4.5: 局部编辑(可选) →  用户指哪改哪，改后重跑对应校验
-Stage 5:   图像 Prompt 输出 →  prompt 文件生成
-Stage 6:   视频合成(可选)  →  ffmpeg_builder.py（支持 fade/dissolve 过渡）
+Stage 1: 源文件加载     →  纯文本提取
+  └─ 内容模式选择       →  用户选择 narration / drama
+Stage 2: 资产库建立     →  project.json（角色/场景/道具，dict name-keyed）
+Stage 3: 分集规划       →  episode_plan.json
+Stage 4: 剧本生成       →  逐集 episode_N.json（shot-by-shot）
+  └─ 4.5: 局部编辑     →  按片段号/字段精准修改已验证剧本
+Stage 5: 图像 prompt 输出 →  角色/场景/道具/分镜 prompt + 平台适配指南
+Stage 6: 视频合成       →  FFmpeg xfade + afade（可选）
 ```
-
-**每 Stage 产出 JSON 后必须跑对应校验命令，不通过不进入下一 Stage。**
 
 ---
 
-## 数据模型
+## 数据模型（dict name-keyed，v2.1+）
 
-### project.json 结构
+所有资产（角色/场景/道具）使用 **名称作为 key 的 dict**，而非数组 ID：
 
 ```json
 {
-  "title": "小说名",
-  "content_mode": "narration",
-  "style": "水墨古风",
-  "word_count": 150000,
-  "chapter_count": 120,
   "characters": {
-    "叶辰": {
-      "description": "外貌、性格、服装等详细描述...",
-      "voice_style": "低沉磁性嗓音"
-    }
+    "叶尘": {"description": "...", "voice_style": "..."},
+    "柳青": {"description": "...", "voice_style": "..."}
   },
   "scenes": {
-    "青云宗大殿": {
-      "description": "场景视觉描述：建筑风格、光线、氛围..."
-    }
+    "青云宗练武场": {"description": "..."},
+    "后山瀑布": {"description": "..."}
   },
   "props": {
-    "玄铁剑": {
-      "description": "道具外观描述..."
-    }
-  },
-  "episodes": [
-    {
-      "episode": 1,
-      "title": "陨落的天才",
-      "chapter_range": [1, 5],
-      "script_file": "episode_1.json",
-      "summary": "..."
-    }
-  ]
+    "青冥剑": {"description": "..."},
+    "寒玉剑": {"description": "..."}
+  }
 }
 ```
 
-**关键约束**：
-- `characters` / `scenes` / `props` 的 key 是资产名称，value 包含 `description`（必填，非空字符串）
-- `characters.*.description` ≥ 30 中文字符
-- `scenes.*.description` / `props.*.description` ≥ 20 中文字符
-- `voice_style` 可选，若存在必须为非空字符串
+**字段约束**：
+- `project.json` 顶层仅允许: `title, content_mode, style, word_count, chapter_count, characters, scenes, props, episodes`
+- 角色仅允许: `description, voice_style`
+- 场景仅允许: `description`
+- 道具仅允许: `description`
+- episode_N.json 段级仅允许: `segment_id/scene_id, duration_seconds, novel_text, characters_in_segment/characters_in_scene, scenes, props, image_prompt, video_prompt, transition_to_next, segment_break, dialogue`
+- image_prompt 仅允许: `scene, composition`
+- composition 仅允许: `shot_type, lighting, ambiance`
+- video_prompt 仅允许: `action, camera_motion, ambiance_audio, dialogue`
+- dialogue 行仅允许: `character, text`
 
-### episode_N.json 结构（narration 模式）
-
-```json
-{
-  "title": "陨落的天才",
-  "content_mode": "narration",
-  "segments": [
-    {
-      "segment_id": "E1S01",
-      "duration_seconds": 6,
-      "novel_text": "小说原文保留...",
-      "characters_in_segment": ["叶辰"],
-      "scenes": ["青云宗大殿"],
-      "props": ["玄铁剑"],
-      "image_prompt": {
-        "scene": "A young cultivator... (≥ 30 English words)",
-        "composition": {
-          "shot_type": "Medium Shot",
-          "lighting": "...",
-          "ambiance": "..."
-        }
-      },
-      "video_prompt": {
-        "action": "The young man slowly raises his head...",
-        "camera_motion": "Tracking Shot",
-        "ambiance_audio": "风穿过大殿的呼啸声",
-        "dialogue": []
-      },
-      "transition_to_next": "cut"
-    }
-  ]
-}
-```
-
-**关键约束**：
-- `segment_id` 格式：`E{集号}S{序号}` 或 `E{集号}S{序号}_{子序号}`（正则 `^E\d+S\d+(?:_\d+)?$`）
-- `duration_seconds` 范围 1-60，必须是整数（不能是 bool）
-- `characters_in_segment` / `scenes` / `props` 中的名称必须在 project.json 对应 dict key 中存在
-- `image_prompt.scene` ≥ 30 英文单词
-- `video_prompt.action` 仅描述物理可观察动作，禁止 `陷入`/`回忆`/`意识到`/`决心`/`仿佛`
-- `ambiance_audio` 仅描述场景内环境音，禁止 BGM/配乐/画外音
-- `dialogue` 仅当原文有引号对话时填写；drama 模式下 dialogue 数组每项需含 `character` + `text`
-
-### episode_N.json 结构（drama 模式）
-
-与 narration 的主要区别：用 `scenes` 数组（每项含 `scene_id` 格式 `E{n}S{nn}`、`characters_in_scene`）、`dialogue` 数组需校验。
-
----
-
-## 工作目录约定
-
-- 所有产出: `{output_dir}/novel-to-video/{novel_title}/`
-- 中间临时文件: `{temp_dir}/novel-to-video/`
-- 校验脚本: 本 Skill 目录下的 `scripts/validators.py` 和 `scripts/ffmpeg_builder.py`
-- `output_dir` / `temp_dir` 从环境信息中获取
-
----
-
-## 分段策略
-
-长篇小说的 LLM 处理容易因上下文窗口限制导致遗忘或截断。Stage 2 后根据 `validators.py estimate` 输出决定策略：
-
-| segment 预估数 | 策略 |
-|---------------|------|
-| ≤ 50 | 全文一次处理 |
-| 51-100 | Stage 4 每 5 集一批，批次结束后跑 crosscheck |
-| > 100 | Stage 3 增加一级"幕"结构，每幕 3-5 集独立处理；跨幕用角色摘要注入 |
-
-每批处理时，下一批输入必须包含前一批的核心角色/场景摘要，防止 LLM 遗忘。
+**v2.3 强制检测**：`validators.py` 在所有层级运行 `_check_extra_fields()`，未知字段直接 FAIL（对齐 Arcreel `ConfigDict(extra='forbid')`）。
 
 ---
 
 ## Stage 1: 源文件加载
 
-1. 使用 `read_text` 读取全文；超长文件分段读取后拼接
-2. 统计字数、章节数
-3. 字数 < 500 时提示用户确认
+**输入**: 用户提供的小说文件路径（支持 .txt / .md）
+
+**流程**:
+1. 使用 `read_text` 读取全文
+2. 超长文件分段读取后拼接
+3. 统计字数、章节数等基础信息
+
+**输出**: 内存中的纯文本全文 + 基础统计信息
+
+**质量门槛**:
+- 字数 ≥ 500
+- 编码无乱码
+
+**Stage 1 完成后，必须先完成「内容模式选择」，再进入 Stage 2。**
 
 ---
 
-## Stage 1.5: 内容模式选择（强制执行）
+## 内容模式选择（Stage 1 后强制执行）
 
-**必须**使用 `ask_user` 让用户选择：
+使用 `ask_user` 让用户选择：
 
-```
-type: single_select
-title: "选择视频内容模式"
-display_type: text
-options:
-  - label: "说书模式 (narration)"
-    description: "旁白叙述驱动，画面配合朗读节奏。9:16 竖屏。分镜按朗读段落拆分。"
-  - label: "剧集动画模式 (drama)"
-    description: "角色对白驱动，按场景和对话结构组织。16:9 横屏。分镜按场景拆分。"
-```
+| 模式 | content_mode | 画面结构 | 构图 | 驱动方式 |
+|------|-------------|---------|------|---------|
+| 说书模式 | narration | segments (segment_id) | 9:16 竖屏 | 旁白叙述 |
+| 剧集动画 | drama | scenes (scene_id) | 16:9 横屏 | 角色对白 |
 
 ---
 
-## Stage 2: 资产库建立
+## Stage 2: 资产库建立 → project.json
 
-1. LLM 通读全文，提取角色/场景/道具
-2. 写入 `{output_dir}/project.json`
+**输入**: Stage 1 全文
 
-**角色提取要求**：
-- `description` 必须从原文提取外貌细节（发型、服饰、体型、标志性特征），≥ 30 中文字符
-- 推断的标注"原文未详述"
-- `voice_style` 可选，根据角色性格推断配音风格
+**流程**:
+1. LLM 提取角色/场景/道具，各含 `description`（中文 ≥30/20/20 字符）
+2. 角色需 `voice_style`
+3. 写入 `project.json`（dict name-keyed 格式）
 
-**场景提取要求**：
-- `description` 必须包含建筑风格/光线/氛围等可画面化信息，≥ 20 中文字符
+**v2.3 新增字段**:
+- `style`: 风格标签，仅允许 `水墨古风 | 赛博朋克 | 日系动画 | 写实电影 | default`
+- `episodes[].script_file`: 每集对应的剧本文件名
 
-**道具提取要求**：
-- `description` 必须描述外观、材质、特殊效果
+**校验**: Stage 2 完成后立即运行 `python validators.py project project.json`
 
-3. **完成后立即跑校验**：
-
-```bash
-python3 validators.py project {output_dir}/project.json
-```
-
-4. **产出量预估**：
-
-```bash
-python3 validators.py estimate {output_dir}/project.json
-```
+**质量门槛**:
+- 至少 2 个角色
+- 角色 description ≥30 中文字符
+- 场景 description ≥20 中文字符
+- 道具 description ≥20 中文字符
 
 ---
 
-## Stage 3: 分段分集规划
+## Stage 3: 分集规划 → episode_plan.json
 
-1. LLM 分析全文结构，标记自然断点（章节转换、时间跳跃、场景切换）
-2. 每集 2-5 个 segment，总镜头数 6-15 个
-3. 写入 `{output_dir}/episode_plan.json`
+**流程**:
+1. LLM 分析断点，给出分集方案
+2. 使用 `ask_user` 让用户确认
+3. 写入 `episode_plan.json`
 
-**episode_plan.json 结构**:
-
-```json
-{
-  "novel_title": "小说名",
-  "total_chapters": 120,
-  "batch_strategy": "full",
-  "episodes": [
-    {
-      "episode": 1,
-      "title": "集标题",
-      "chapter_range": [1, 3],
-      "summary": "本集内容概要",
-      "key_events": ["事件1", "事件2"],
-      "key_characters": ["叶辰", "林婉儿"],
-      "key_scenes": ["青云宗大殿"]
-    }
-  ]
-}
-```
-
-4. **校验分集方案**（推荐传入 project.json 做交叉校验）：
-
-```bash
-# 仅校验断点连续性
-python3 validators.py episode {output_dir}/episode_plan.json {word_count}
-
-# 同时交叉校验 key_characters/key_scenes 是否在 project.json 中存在
-python3 validators.py episode {output_dir}/episode_plan.json {word_count} {output_dir}/project.json
-```
-
-5. 使用 `ask_user(multi_select)` 展示分集方案，让用户确认或调整。
+**校验**: `python validators.py episode episode_plan.json <word_count> [project.json]`
+- 检查 chapter_range 连续性
+- 检查 key_characters / key_scenes 引用（若给定 project.json）
 
 ---
 
-## Stage 4: 分批剧本生成
+## Stage 4: 剧本生成 → episode_N.json
 
-**核心原则：不许一次性生成全部 JSON，必须逐批处理。**
-
-### 批次规划
-
-```
-总集数 ≤ 5          → 1 批全部
-总集数 6-10         → 2 批
-总集数 > 10         → 每批 5 集
-```
-
-### 每批流程
-
-1. LLM 生成该批各集的 `scripts/episode_N.json`
-2. 每集生成后立即跑校验：
-```bash
-python3 validators.py script {output_dir}/project.json {output_dir}/scripts/episode_N.json
-```
-3. 该批全部通过后，跑跨集一致性：
-```bash
-python3 validators.py crosscheck {output_dir}/project.json {output_dir}/scripts/
-```
-4. 下一批输入前，提取前一批的核心角色/场景摘要，注入 LLM 上下文
-
-### 禁止词族
-
-以下词汇在 `image_prompt.scene` 和 `video_prompt.action` 中**绝对禁止**：
-
-| 类别 | 禁止词 |
-|------|--------|
-| 抽象情绪 | 陷入、回忆、思绪、意识到、决心、仿佛、像蝴蝶般 |
-| 抽象形容词 | 精致、震撼、绝美、惊艳、无与伦比 |
-| 内心动词 | suddenly realize、flashback、nostalgia |
-| 音频越界 | BGM、配乐、画外音、背景音乐 |
-
-### 校验增强
+**逐集生成**，每集完成后立即校验:
 
 ```bash
-# 严格模式：WARN 也作为 FAIL 中断
-python3 validators.py script {output_dir}/project.json {output_dir}/scripts/episode_N.json --strict
-python3 validators.py crosscheck {output_dir}/project.json {output_dir}/scripts/ --strict
+python validators.py script project.json episode_N.json
 ```
 
----
+**校验内容** (v2.3 全层级):
+- 顶层、segment、image_prompt、composition、video_prompt、dialogue 所有层级字段越界检测
+- segment_id 正则 `E{n}S{nn}` + 禁止词族扫描
+- shot_type / camera_motion / transition 枚举校验
+- duration_seconds 1-60 整数约束
+- 角色/场景/道具引用一致性
+- drama 模式 dialogue 数组结构和字段
+- image_prompt.scene ≥30 单词
+- 禁止词族: `陷入|回忆|思绪|意识到|画外音|BGM|精致|震撼|回忆翻涌|决心|仿佛|像蝴蝶般|suddenly realize|flashback|nostalgia|masterpiece|breathtaking`
 
-## Stage 4.5: 局部编辑
+**禁止项**:
+- image_prompt / video_prompt 中禁止平台特定语法（如 `--ar`、`negative:`）
+- video_prompt.ambiance_audio 禁止 BGM/配乐/画外音/旁白
 
-用户指出某段文案/分镜有问题时，不走全量重生成：
+### Stage 4.5: 局部编辑
 
-1. 读取目标 `scripts/episode_N.json`
-2. 定位到用户指定的 segment/scene（按 segment_id / scene_id）
-3. 仅修改用户指定的字段
-4. 修改后重跑 `validators.py script` 校验
-5. 确认通过后落盘
+已生成的 episode_N.json 可精准修改：按 segment_id 定位 → 修改指定字段 → 重新校验。
 
 ---
 
 ## Stage 5: 图像 Prompt 输出
 
-### 输出结构
-
+**目录结构**:
 ```
-{output_dir}/novel-to-video/{novel_title}/prompts/
+prompts/
+├── README.md
 ├── 01_characters/
-│   ├── 叶辰.txt
-│   └── 林婉儿.txt
 ├── 02_scenes/
-│   └── 青云宗大殿.txt
 ├── 03_props/
-│   └── 玄铁剑.txt
-├── 04_segments/
-│   ├── E1S01.txt
-│   └── E1S02.txt
-├── REFERENCE_MAP.txt
-└── README.md
+└── 04_segments/
 ```
 
-### 分镜 prompt 引用路径（相对路径）
+**角色设计图 prompt**: 风格前缀 + 角色 description + 16:9 四格布局（胸像特写 + 正面 / 四分之三侧面 / 背面 A-Pose）
 
-```
-[REFERENCE IMAGES REQUIRED]
-角色设计: prompts/01_characters/叶辰.txt
-场景设计: prompts/02_scenes/青云宗大殿.txt
-前一分镜: prompts/04_segments/E1S01.txt
-```
+**场景设计图 prompt**: 风格前缀 + 场景 description + 四分之三主画面 + 右下细节小图
 
-### REFERENCE_MAP.txt
+**道具设计图 prompt**: 风格前缀 + 道具 description + 三视图
 
-```
-叶辰   → 角色  → 去 Gemini/ComfyUI 时上传角色设计图作为参考
-青云宗大殿 → 场景 → 上传场景设计图作为参考
-```
+**分镜图 prompt**: `[REFERENCE IMAGES REQUIRED]` 块 + `[PROMPT]` 块（scene + composition）+ `[VIDEO PROMPT]` 块（action + camera_motion + ambiance_audio + dialogue）
 
-### 平台适配
-
-写入 `prompts/README.md`，建议的生成顺序：
-1. Gemini Imagen / Midjourney: 角色设计图（上传参考图确保一致性）
-2. 场景设计图（作为分镜背景参考）
-3. Kling / Runway / Vidu: 分镜图合成视频（逐段生成，保持角色一致性）
+**平台适配**: Gemini / OpenAI / Midjourney / ComfyUI
 
 ---
 
 ## Stage 6: 视频合成
 
-使用 `scripts/ffmpeg_builder.py`（v2.2 已实现 fade/dissolve 过渡）：
-
+**使用方法**:
 ```bash
-python3 ffmpeg_builder.py \
-  {output_dir}/scripts/episode_1.json \
-  {images_dir}/episode_1/ \
-  --aspect 9:16 \
-  --audio {audio.mp3} \
-  --fps 24 \
-  --output episode_1.mp4
+python ffmpeg_builder.py episode_N.json images_dir \
+    --audio background.mp3 \
+    --output episode_N.mp4 \
+    --aspect 9:16 \
+    --fps 24
 ```
 
-**功能**：
-- 从剧本 JSON 读取 duration_seconds 和 transition_to_next
-- `cut`: 直接切换
-- `fade`: 0.5s 黑场淡入淡出（xfade）
-- `dissolve`: 0.5s 交叉溶解（xfade）
-- 自动 scale + pad 到目标分辨率 (9:16=1080x1920, 16:9=1920x1080)
-- 可选叠加音频轨（--audio 参数）
+**v2.2 xfade 过渡**: fade → 0.5s 黑场淡入淡出，dissolve → 0.5s 交叉溶解
+
+**v2.3 afade 音频淡化**: 每个过渡点对背景音频轨做 `afade` 交叉淡化，避免生硬跳变。单帧时自动退化为 concat 式覆盖。
 
 ---
 
-## Style 模板集成
+## 校验命令速查
 
-生成 `image_prompt.scene` 和 `video_prompt.action` 时，LLM 应参考用户选择的 style：
+| 命令 | 用途 | v2.3 新增 |
+|------|------|----------|
+| `validators.py project project.json` | 校验资产库 | 字段越界 + style 枚举 |
+| `validators.py episode plan.json <wc> [project.json]` | 校验分集方案 | - |
+| `validators.py script project.json ep_N.json` | 校验单集剧本 | 全层级越界 |
+| `validators.py crosscheck project.json scripts_dir/` | 跨集一致性 | script_file 存在性 |
+| `validators.py estimate project.json` | 产出量预估 | script_file 缺失提示 |
+| `--strict` | WARN 提升为 FAIL | - |
 
-| style | 对 prompt 的影响 |
-|-------|-----------------|
-| 水墨古风 | 画面描述增加"水墨渲染"、"留白意境"、"墨色浓淡" |
-| 赛博朋克 | 增加"霓虹灯管"、"全息投影"、"金属义体"、"雨夜街道" |
-| 日系动画 | 增加"赛璐珞风格"、"柔焦背景"、"色彩明快" |
-| 写实电影 | 增加"自然光"、"实景质感"、"景深虚化" |
+## 测试套件
 
-Stage 1.5 之后，在 `ask_user` 中增加 style 选择确认环节。
+```
+tests/
+├── run_tests.py          # 主测试脚本
+├── fixtures/
+│   ├── valid/            # 有效夹具（project + plan + episode_1/2/3）
+│   └── invalid/          # 无效夹具（越界字段 + 禁止词 + 格式错误）
+```
 
----
+运行: `python tests/run_tests.py [--strict]`
+
+## 工作目录约定
+
+- 所有产出写入 `{output_dir}/novel-to-video/{novel_title}/`
+- 中间临时文件写入 `{temp_dir}/novel-to-video/`
 
 ## 执行原则
 
-1. **逐 Stage 推进**：每 Stage 产出后展示摘要，等待用户确认
-2. **产出必校验**：任何 JSON 产出后**必须**跑对应 validators.py 命令，不通过不进入下一 Stage
-3. **分段不可跳过**：segment 预估 > 50 时强制执行分批策略
-4. **Stage 5 纯输出**：不调用任何图像 API
-5. **Stage 6 按需**：仅用户明确要求时执行
-6. **文件 I/O**：优先使用 `write_file` 工具写入产出
-7. **局部修改优于全量重来**：用户指出单段问题时走 Stage 4.5 编辑流程
+1. **逐 Stage 推进**: 每完成一个 Stage 运行对应校验，再进入下一 Stage
+2. **Stage 1-4 全自动**: 文本处理不需要用户干预
+3. **Stage 5 纯输出**: 只生成 prompt 文件，不调用图像 API
+4. **Stage 6 按需**: 仅当用户明确要求时执行
+5. **暂停点**: >100K 字时 Stage 1 后提示确认
 
 ## 模型行为约束
 
-- 分析用中文，`image_prompt.scene` 用英文
-- 角色外貌必须从原文提取，不得编造；推断的标注"原文未详述"
-- 分集断点优先章节边界，其次场景转换
-- `duration_seconds` 默认 5-8 秒，对白密集可延长到 10-12 秒，上限 60 秒
-- 严格遵循禁止词族
-- `ambiance_audio` 只写环境音，不写 BGM/配乐/画外音
-- `dialogue` 仅在原文有引号对话时填写
-- 资产名称（角色/场景/道具）使用原文出现的中文名
+- 分析小说用中文，image_prompt.scene 须英文
+- 角色外貌从原文提取，不自行编造
+- 原文未详述的标注"原文未详述，已基于上下文推断"
+- 分集断点优先章节边界
+- duration_seconds 默认 5-8 秒，对白密集可延长到 10-12 秒
+- image_prompt.scene 描述静态画面，video_prompt.action 描述物理动作
 *（内容由AI生成，仅供参考）*

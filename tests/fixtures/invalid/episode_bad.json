@@ -1,0 +1,41 @@
+{
+  "episode": 99,
+  "title": "不好的剧本",
+  "content_mode": "drama",
+  "extra_divergent_field": "should fail",
+  "scenes": [
+    {
+      "scene_id": "BAD_FORMAT",
+      "duration_seconds": "not_an_int",
+      "characters_in_scene": ["不存在角色"],
+      "scenes": ["不存在的场景"],
+      "props": ["不存在的道具"],
+      "image_prompt": {
+        "scene": "陷入回忆中的她仿佛像蝴蝶般美丽",
+        "composition": {
+          "shot_type": "Top-down",
+          "lighting": "",
+          "ambiance": "BGM响起，画外音传来"
+        }
+      },
+      "video_prompt": {
+        "action": "too short",
+        "camera_motion": "Spin Around",
+        "ambiance_audio": "配乐和背景音乐烘托气氛"
+      },
+      "transition_to_next": "flash",
+      "is_comedy": false,
+      "dialogue": [
+        {
+          "character": "角色三",
+          "text": "BGM太震撼了",
+          "mood": "happy"
+        },
+        {
+          "character": "",
+          "text": ""
+        }
+      ]
+    }
+  ]
+}
