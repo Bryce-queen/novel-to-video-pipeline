@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""v2.8.1 测试套件 — 覆盖 project / episode / script / crosscheck / estimate 全部命令，含 drama 模式 + ArcReel 正典 schema 对齐。
+"""v2.9.0 测试套件 — 覆盖 project / episode / script / crosscheck / estimate 全部命令，含 drama 模式 + ArcReel 正典 schema 对齐。
 
 用法:
     python run_tests.py [--strict]

@@ -11,7 +11,7 @@
       "scenes": ["青云宗练武场"],
       "props": ["青冥剑"],
       "image_prompt": {
-        "scene": "Misty morning at a martial arts training ground with ancient stone tiles a lone young swordsman practicing sword forms under a willow tree fog swirling around practice dummies",
+        "scene": "Misty morning at an ancient martial arts training ground with weathered stone tiles and a lone young swordsman practicing graceful sword forms under a massive weeping willow tree with delicate fog swirling slowly around the wooden practice dummies",
         "composition": {
           "shot_type": "Long Shot",
           "lighting": "Soft dawn light",
@@ -19,7 +19,7 @@
         }
       },
       "video_prompt": {
-        "action": "The young swordsman executes a slow deliberate sword kata blade cutting through mist creating ripples in the morning air",
+        "action": "The young swordsman executes a slow deliberate sword kata blade cutting through mist creating ripples in the morning air while dew drops scatter",
         "camera_motion": "Pan Left",
         "ambiance_audio": ""
       },
