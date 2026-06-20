@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""v2.9.2 测试套件 — 覆盖 project / episode / script / crosscheck / estimate 全部命令，含 drama 模式 + ArcReel 正典 schema 对齐。
+"""v2.9.3 测试套件 — 覆盖 project / episode / script / crosscheck / estimate 全部命令，含 drama 模式 + ArcReel 正典 schema 对齐。
 
 用法:
     python run_tests.py [--strict]
@@ -53,7 +53,7 @@ def main():
     strict = "--strict" in sys.argv
 
     print(f"\n{BOLD}╔══════════════════════════════════════╗{RESET}")
-    print(f"{BOLD}║  novel-to-video-pipeline v2.9.2   ║{RESET}")
+    print(f"{BOLD}║  novel-to-video-pipeline v2.9.3   ║{RESET}")
     print(f"{BOLD}║   测试套件                          ║{RESET}")
     print(f"{BOLD}╚══════════════════════════════════════╝{RESET}")
     print(f"\n  strict 模式: {'ON' if strict else 'OFF'}")

@@ -1,11 +1,11 @@
 ---
 name: novel-to-video-pipeline
 description: >
-  将长篇小说转化为结构化分镜剧本的完整流水线。六阶段：源文件加载 → 资产库建立（角色/场景/道具 dict name-keyed）→ 分集规划 → 剧本生成（shot-by-shot 结构化 JSON，narration/drama 双模式）→ 图像 Prompt 输出 → 视频合成（xfade dissolve/fade + afade 音频淡化）。v2.9.2 修正：dialogue 从 segment 级移至 video_prompt 内，对齐 ArcReel Pydantic VideoPrompt.dialogue 正典位置。
-version: 2.9.2
+  将长篇小说转化为结构化分镜剧本的完整流水线。六阶段：源文件加载 → 资产库建立（角色/场景/道具 dict name-keyed）→ 分集规划 → 剧本生成（shot-by-shot 结构化 JSON，narration/drama 双模式）→ 图像 Prompt 输出 → 视频合成（xfade dissolve/fade + afade 音频淡化）。v2.9.3 修正：dialogue 从 segment 级移至 video_prompt 内，对齐 ArcReel Pydantic VideoPrompt.dialogue 正典位置。
+version: 2.9.3
 ---
 
-# Novel-to-Video Pipeline v2.9.2
+# Novel-to-Video Pipeline v2.9.3
 
 将长篇小说转化为结构化分镜剧本的完整流水线。纯文本处理由 Marvis 自闭环，图像/视频阶段输出平台无关的 prompt 与调用指令。
 
