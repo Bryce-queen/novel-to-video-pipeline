@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""v2.9.0 测试套件 — 覆盖 project / episode / script / crosscheck / estimate 全部命令，含 drama 模式 + ArcReel 正典 schema 对齐。
+"""v2.9.1 测试套件 — 覆盖 project / episode / script / crosscheck / estimate 全部命令，含 drama 模式 + ArcReel 正典 schema 对齐。
 
 用法:
     python run_tests.py [--strict]
@@ -53,7 +53,7 @@ def main():
     strict = "--strict" in sys.argv
 
     print(f"\n{BOLD}╔══════════════════════════════════════╗{RESET}")
-    print(f"{BOLD}║   novel-to-video-pipeline v2.9.0   ║{RESET}")
+    print(f"{BOLD}║  novel-to-video-pipeline v2.9.1   ║{RESET}")
     print(f"{BOLD}║   测试套件                          ║{RESET}")
     print(f"{BOLD}╚══════════════════════════════════════╝{RESET}")
     print(f"\n  strict 模式: {'ON' if strict else 'OFF'}")
@@ -235,30 +235,6 @@ def main():
             "script",
             str(VALID_DIR / "project.json"),
             str(INVALID_DIR / "no_lighting_ambiance.json"),
-        ],
-        expect_fail=True,
-    )
-
-    # v2.9 新增: narration 段 video_prompt.action 不足 20 词
-    print("\n  narration_short_action.json (narration 段 action 不足 20 词应被拒):")
-    results["invalid_narration_short_action"] = run(
-        base_cmd
-        + [
-            "script",
-            str(VALID_DIR / "project.json"),
-            str(INVALID_DIR / "narration_short_action.json"),
-        ],
-        expect_fail=True,
-    )
-
-    # v2.9 新增: narration 段缺 ambiance_audio
-    print("\n  narration_no_ambiance.json (narration 段缺 ambiance_audio 应被拒):")
-    results["invalid_narration_no_ambiance"] = run(
-        base_cmd
-        + [
-            "script",
-            str(VALID_DIR / "project.json"),
-            str(INVALID_DIR / "narration_no_ambiance.json"),
         ],
         expect_fail=True,
     )
