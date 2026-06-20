@@ -6,9 +6,15 @@
     {
       "scene_id": "E1S01",
       "duration_seconds": 8,
-      "characters_in_scene": ["叶尘"],
-      "scenes": ["青云宗练武场"],
-      "props": ["青冥剑"],
+      "characters_in_scene": [
+        "叶尘"
+      ],
+      "scenes": [
+        "青云宗练武场"
+      ],
+      "props": [
+        "青冥剑"
+      ],
       "image_prompt": {
         "scene": "Misty morning at a martial arts training ground with ancient stone tiles, a lone young swordsman in simple cloth robes practicing sword forms under a centuries-old willow tree, morning fog swirling around wooden practice dummies and weapon racks.",
         "composition": {
@@ -20,19 +26,29 @@
       "video_prompt": {
         "action": "The young swordsman executes a slow deliberate sword kata, blade cutting through mist, droplets flying off the sword tip",
         "camera_motion": "Pan Left",
-        "ambiance_audio": "Distant birdsong, wind through willow branches, rhythmic swishing of sword through air"
+        "ambiance_audio": "Distant birdsong, wind through willow branches, rhythmic swishing of sword through air",
+        "dialogue": [
+          {
+            "speaker": "叶尘",
+            "line": "第一千次了，还是差一点。"
+          }
+        ]
       },
-      "transition_to_next": "cut",
-      "dialogue": [
-        {"speaker": "叶尘", "line": "第一千次了，还是差一点。"}
-      ]
+      "transition_to_next": "cut"
     },
     {
       "scene_id": "E1S02",
       "duration_seconds": 6,
-      "characters_in_scene": ["叶尘", "柳青"],
-      "scenes": ["青云宗练武场"],
-      "props": ["寒玉剑"],
+      "characters_in_scene": [
+        "叶尘",
+        "柳青"
+      ],
+      "scenes": [
+        "青云宗练武场"
+      ],
+      "props": [
+        "寒玉剑"
+      ],
       "image_prompt": {
         "scene": "Same training ground now with morning light brighter, the young swordsman pausing mid-practice as a coldly beautiful young woman approaches with an ice-crystal sword, her robes flowing in the breeze.",
         "composition": {
@@ -44,13 +60,19 @@
       "video_prompt": {
         "action": "The woman stops at the edge of the training ground, her cold gaze sweeping over the swordsman, she draws her ice blade in a single fluid motion",
         "camera_motion": "Static",
-        "ambiance_audio": "Morning breeze, distant footsteps, the crystalline ring of a sword being drawn"
+        "ambiance_audio": "Morning breeze, distant footsteps, the crystalline ring of a sword being drawn",
+        "dialogue": [
+          {
+            "speaker": "柳青",
+            "line": "你就是那个打破石碑的外门弟子？"
+          },
+          {
+            "speaker": "叶尘",
+            "line": "是，柳师姐有何指教？"
+          }
+        ]
       },
-      "transition_to_next": "dissolve",
-      "dialogue": [
-        {"speaker": "柳青", "line": "你就是那个打破石碑的外门弟子？"},
-        {"speaker": "叶尘", "line": "是，柳师姐有何指教？"}
-      ]
+      "transition_to_next": "dissolve"
     }
   ]
 }

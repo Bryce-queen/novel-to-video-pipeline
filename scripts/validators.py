@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Novel-to-Video Pipeline v2.9.1 — 产出物校验脚本集（ArcReel 正典 schema 逐字段对齐 + extra='forbid'）。
+"""Novel-to-Video Pipeline v2.9.2 — 产出物校验脚本集（ArcReel 正典 schema 逐字段对齐 + extra='forbid'）。
 
 使用方式:
     python validators.py project    <project.json> [--strict]                    # 校验 project.json
@@ -139,7 +139,7 @@ EPISODE_VALID_FIELDS = frozenset({
 SEGMENT_CORE_FIELDS = frozenset({
     "duration_seconds", "scenes", "props",
     "image_prompt", "video_prompt", "transition_to_next",
-    "segment_break", "dialogue",
+    "segment_break",
     "note",  # v2.5: ArcReel NarrationSegment / DramaScene 均有 note 字段
 })
 NARRATION_EXTRA_FIELDS = frozenset({"segment_id", "novel_text", "characters_in_segment"})
@@ -486,9 +486,10 @@ def _validate_segment_entry(
             errors.append(f"{seg_id}: narration 模式缺少 novel_text")
         if "characters_in_segment" not in seg:
             errors.append(f"{seg_id}: narration 模式缺少 characters_in_segment")
-        # v2.6: narration 段禁止 dialogue（ArcReel NarrationSegment 无此字段）
-        if "dialogue" in seg:
-            errors.append(f"{seg_id}: narration 段禁止 dialogue 字段（仅 drama 模式使用）")
+        # v2.9.2: narration 模式 video_prompt 禁止 dialogue（ArcReel 正典 dialogue 仅 drama 场景用）
+        narration_dl = vp.get("dialogue", []) if vp else []
+        if isinstance(narration_dl, list) and len(narration_dl) > 0:
+            errors.append(f"{seg_id}: narration 模式 video_prompt 禁止 dialogue（仅 drama 场景使用）")
 
     # v2.6: drama 模式必须包含 characters_in_scene
     if mode == "drama" and "characters_in_scene" not in seg:
@@ -499,8 +500,8 @@ def _validate_segment_entry(
         errors.append(f"{seg_id}: segment_break 必须是布尔值")
 
 
-def _validate_drama_dialogue(seg_id: str, seg: dict, errors: list[str]) -> None:
-    dialogue = seg.get("dialogue")
+def _validate_drama_dialogue(seg_id: str, vp: dict, errors: list[str]) -> None:
+    dialogue = vp.get("dialogue")
     if dialogue is None:
         return
     if not isinstance(dialogue, list):
@@ -593,7 +594,7 @@ def validate_script(project_path: str, script_path: str) -> None:
         )
 
         if content_mode == "drama":
-            _validate_drama_dialogue(sid, seg, errors)
+            _validate_drama_dialogue(sid, seg.get("video_prompt", {}), errors)
 
     if errors:
         fail("\n".join(errors))

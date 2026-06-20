@@ -5,9 +5,15 @@
   "scenes": [
     {
       "scene_id": "E1S01",
-      "characters_in_scene": ["叶尘"],
-      "scenes": ["青云宗练武场"],
-      "props": ["青冥剑"],
+      "characters_in_scene": [
+        "叶尘"
+      ],
+      "scenes": [
+        "青云宗练武场"
+      ],
+      "props": [
+        "青冥剑"
+      ],
       "image_prompt": {
         "scene": "Misty morning at a martial arts training ground with ancient stone tiles, a lone swordsman in simple cloth robes practicing sword forms under a centuries-old willow tree, morning fog swirling around practice dummies and weapon racks, soft dawn light filtering through the canopy.",
         "composition": {
@@ -19,18 +25,27 @@
       "video_prompt": {
         "action": "The swordsman executes a slow deliberate sword kata, blade cutting through morning mist, droplets flying off the sword tip",
         "camera_motion": "Pan Left",
-        "ambiance_audio": "Distant birdsong, wind through willow branches, rhythmic swishing of sword through air"
+        "ambiance_audio": "Distant birdsong, wind through willow branches, rhythmic swishing of sword through air",
+        "dialogue": [
+          {
+            "speaker": "叶尘",
+            "line": "第一千次了，还是差一点。"
+          }
+        ]
       },
-      "transition_to_next": "cut",
-      "dialogue": [
-        {"speaker": "叶尘", "line": "第一千次了，还是差一点。"}
-      ]
+      "transition_to_next": "cut"
     },
     {
       "scene_id": "E1S02",
-      "characters_in_scene": ["叶尘"],
-      "scenes": ["青云宗练武场"],
-      "props": ["寒玉剑"],
+      "characters_in_scene": [
+        "叶尘"
+      ],
+      "scenes": [
+        "青云宗练武场"
+      ],
+      "props": [
+        "寒玉剑"
+      ],
       "image_prompt": {
         "scene": "A secluded bamboo grove beside the martial training ground at dusk, ancient moss-covered stone path winding through, a jade-hued sword with intricate engravings resting on a flat rock illuminated by the last rays of gold-orange sunset light.",
         "composition": {

@@ -7,9 +7,15 @@
     {
       "scene_id": "BAD_FORMAT",
       "duration_seconds": "not_an_int",
-      "characters_in_scene": ["不存在角色"],
-      "scenes": ["不存在的场景"],
-      "props": ["不存在的道具"],
+      "characters_in_scene": [
+        "不存在角色"
+      ],
+      "scenes": [
+        "不存在的场景"
+      ],
+      "props": [
+        "不存在的道具"
+      ],
       "image_prompt": {
         "scene": "陷入回忆中的她仿佛像蝴蝶般美丽",
         "composition": {
@@ -21,21 +27,21 @@
       "video_prompt": {
         "action": "too short",
         "camera_motion": "Spin Around",
-        "ambiance_audio": "配乐和背景音乐烘托气氛"
+        "ambiance_audio": "配乐和背景音乐烘托气氛",
+        "dialogue": [
+          {
+            "character": "角色三",
+            "text": "BGM太震撼了",
+            "mood": "happy"
+          },
+          {
+            "character": "",
+            "text": ""
+          }
+        ]
       },
       "transition_to_next": "flash",
-      "is_comedy": false,
-      "dialogue": [
-        {
-          "character": "角色三",
-          "text": "BGM太震撼了",
-          "mood": "happy"
-        },
-        {
-          "character": "",
-          "text": ""
-        }
-      ]
+      "is_comedy": false
     }
   ]
 }
